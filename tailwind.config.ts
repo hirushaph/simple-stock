@@ -12,7 +12,7 @@ export default {
         background: "#EFEFEF",
         foreground: "var(--foreground)",
         accent: "#27ae60",
-        accentLight: "#2ecc71",
+        accentLight: "rgba(39,174,96,0.1)",
         darkGrey: "#CFCFCF",
       },
     },
