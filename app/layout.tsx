@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased bg-background `}>
-        <main className="h-screen grid grid-rows-[80px_1fr] grid-cols-[240px_1fr]">
+        <main className="h-screen grid grid-rows-[70px_1fr] grid-cols-[240px_1fr]">
           {/* Top Navbar */}
           <Header />
 
