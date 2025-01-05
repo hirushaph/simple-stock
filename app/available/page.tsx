@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import ProductList from "../_components/ProductList";
 import Spinner from "../_components/Spinner";
+import { getAvailableStock } from "../_lib/api";
 
 type AvailablePageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -8,6 +9,8 @@ type AvailablePageProps = {
 
 export default async function Available({ searchParams }: AvailablePageProps) {
   const query = (await searchParams).search;
+
+  await getAvailableStock();
 
   return (
     <div className="px-4">

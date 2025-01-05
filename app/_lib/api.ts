@@ -1,29 +1,48 @@
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "./firebase";
 import { StockItemType } from "@/types/types";
+import { databases } from "./appwrite";
+import { DATABASE_ID, ITEM_COLLECTION_ID } from "./const";
+import { Query } from "appwrite";
 
 export async function getAvailableStock(): Promise<StockItemType[]> {
-  const collectionRef = collection(db, "products");
-  const querySnapshot = await getDocs(collectionRef);
-  const data: StockItemType[] = querySnapshot.docs.map(
-    (doc) => doc.data() as StockItemType
+  const result = await databases.listDocuments(
+    DATABASE_ID,
+    ITEM_COLLECTION_ID,
+    []
   );
-  return data;
+
+  const filteredData = result.documents.map(
+    ({ name, sku, stock, image }) =>
+      ({
+        name,
+        sku,
+        stock,
+        image,
+      } as StockItemType)
+  );
+
+  return filteredData;
 }
 
 export async function searchItems(
   searchText: string | string[]
 ): Promise<StockItemType[]> {
-  const productsRef = collection(db, "products");
-
-  const searchQuery = query(productsRef, where("name", "==", searchText));
-
-  const querySnapshot = await getDocs(searchQuery);
-
-  const productsList: StockItemType[] = querySnapshot.docs.map(
-    (doc) => doc.data() as StockItemType
+  const result = await databases.listDocuments(
+    DATABASE_ID,
+    ITEM_COLLECTION_ID,
+    [Query.contains("name", searchText)]
   );
-  return productsList;
+
+  const filteredData = result.documents.map(
+    ({ name, sku, stock, image }) =>
+      ({
+        name,
+        sku,
+        stock,
+        image,
+      } as StockItemType)
+  );
+
+  return filteredData;
 }
 
 export async function getFilterdStock(
