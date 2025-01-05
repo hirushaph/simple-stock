@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getAvailableStock, getFilterdStock } from "../_lib/api";
+import { getFilterdStock } from "../_lib/api";
 
 async function ProductList({ query }: { query?: string | string[] }) {
   const data = await getFilterdStock(query);

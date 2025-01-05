@@ -49,10 +49,7 @@ export async function getFilterdStock(
   query?: string | string[]
 ): Promise<StockItemType[]> {
   if (query) {
-    console.log("im here");
     const data = await searchItems(query);
-
-    console.log(data);
     return data;
   }
 

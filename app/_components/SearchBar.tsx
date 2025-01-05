@@ -1,37 +1,35 @@
-import { useState } from "react";
-import { searchItems } from "../_lib/api";
-import { StockItemType } from "@/types/types";
+"use client";
 
-type SearchBarProps = {
-  setProducts: React.Dispatch<React.SetStateAction<StockItemType[]>>;
-};
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-function SearchBar({ setProducts }: SearchBarProps) {
-  const [query, setQuery] = useState("");
+function SearchBar() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setQuery(e.target.value);
-  }
+    const params = new URLSearchParams(searchParams);
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const results = await searchItems(query);
-    setProducts(results);
+    if (e.target.value) {
+      params.set("search", e.target.value);
+    } else {
+      params.delete("search");
+    }
+
+    replace(`${pathname}?${params.toString()}`);
   }
 
   return (
     <div>
-      <form onSubmit={handleSearch}>
-        <input
-          type="search"
-          name="search"
-          id="search"
-          value={query}
-          onChange={handleChange}
-          placeholder="Search items"
-          className="w-full px-5 py-2 rounded-xl mt-3 outline-none text-gray-500 focus:shadow-sm transition"
-        />
-      </form>
+      <input
+        type="search"
+        name="search"
+        id="search"
+        onChange={handleChange}
+        placeholder="Search items"
+        defaultValue={searchParams.get("search")?.toString()}
+        className="w-full px-5 py-2 rounded-xl mt-3 outline-none text-gray-500 focus:shadow-sm transition"
+      />
     </div>
   );
 }
