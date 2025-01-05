@@ -11,10 +11,12 @@ export async function getAvailableStock(): Promise<StockItemType[]> {
   return data;
 }
 
-export async function searchItems(query: string): Promise<StockItemType[]> {
+export async function searchItems(
+  searchText: string | string[]
+): Promise<StockItemType[]> {
   const productsRef = collection(db, "products");
 
-  const searchQuery = query(productsRef, where("name", "<=", query));
+  const searchQuery = query(productsRef, where("name", "==", searchText));
 
   const querySnapshot = await getDocs(searchQuery);
 
@@ -22,4 +24,19 @@ export async function searchItems(query: string): Promise<StockItemType[]> {
     (doc) => doc.data() as StockItemType
   );
   return productsList;
+}
+
+export async function getFilterdStock(
+  query?: string | string[]
+): Promise<StockItemType[]> {
+  if (query) {
+    console.log("im here");
+    const data = await searchItems(query);
+
+    console.log(data);
+    return data;
+  }
+
+  const data = await getAvailableStock();
+  return data;
 }

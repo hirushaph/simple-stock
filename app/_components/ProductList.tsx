@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { getAvailableStock } from "../_lib/api";
+import { getAvailableStock, getFilterdStock } from "../_lib/api";
 
-async function ProductList() {
-  const data = await getAvailableStock();
+async function ProductList({ query }: { query?: string | string[] }) {
+  const data = await getFilterdStock(query);
   return (
     <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
       {data.map((item) => (
