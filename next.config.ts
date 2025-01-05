@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
         pathname: "/public/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+        port: "",
+        pathname: "**",
+        search: "",
+      },
     ],
   },
 };
