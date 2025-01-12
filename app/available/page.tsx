@@ -9,9 +9,12 @@ type AvailablePageProps = {
 };
 
 export default async function Available({ searchParams }: AvailablePageProps) {
-  const query = (await searchParams).search;
+  const params = await searchParams;
+  const query = Array.isArray(params.search)
+    ? params.search.join(",")
+    : params.search || "";
 
-  await getAvailableStock();
+  console.log(query);
 
   return (
     <div className="px-4">
@@ -19,7 +22,7 @@ export default async function Available({ searchParams }: AvailablePageProps) {
 
       <SearchBar />
 
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={<Spinner />} key={query}>
         <ProductList query={query} />
       </Suspense>
     </div>

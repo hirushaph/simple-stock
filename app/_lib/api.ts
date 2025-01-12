@@ -48,11 +48,15 @@ export async function searchItems(
 export async function getFilterdStock(
   query?: string | string[]
 ): Promise<StockItemType[]> {
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
   if (query) {
     const data = await searchItems(query);
     return data;
   }
 
   const data = await getAvailableStock();
+
   return data;
 }
