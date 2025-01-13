@@ -15,6 +15,13 @@ type ModalProps = {
 function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [isClient, setIsClient] = useState(false);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setIsClient(true); // Ensure component is rendered on client-side
@@ -26,11 +33,63 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     }
   }, [isModalOpen, isClient]);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
+      try {
+        const res = await fetch(`/api/users?query=${searchTerm}`, {
+          signal: abortController.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Error: ${res.statusText}`);
+        }
+        const data = await res.json();
+        setSearchResults(data);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          if (error.name === "AbortError") {
+            console.log("Request canceled");
+          } else {
+            setIsLoading(false);
+          }
+        } else {
+          setIsLoading(false);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [isModalOpen, searchTerm]);
+
   if (!isClient) return null; // Prevent server-side rendering issues
 
   function onCloseModal() {
     dialogRef.current?.close();
     setIsModalOpen(false);
+    setSearchTerm("");
+    setSearchResults([]);
+    setSelectedUser(null);
+  }
+
+  function handleUserSelect(user) {
+    setSelectedUser(user);
+    setSearchResults([]);
   }
 
   return createPortal(
@@ -45,16 +104,16 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
             className="fixed inset-0 bg-black"
           />
           <motion.dialog
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.3 }}
             ref={dialogRef}
             className="bg-white shadow-md w-[600px] p-4 rounded-md z-50 fixed inset-0 m-auto"
           >
             <div className="flex justify-between items-center">
               <h1 className="text-xl font-semibold">Issue Item</h1>
-              <button onClick={() => onCloseModal()}>
+              <button onClick={onCloseModal}>
                 <IoClose size={22} />
               </button>
             </div>
@@ -77,20 +136,47 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
               </div>
               <div>
                 <h3 className="text-sm text-gray-500">Issued to</h3>
-                <input
-                  className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
-                  type="search"
-                  placeholder="search user"
-                />
-                <div className="t gap-2 mt-2 bg-green-100 p-2 rounded-md">
-                  <span className="text-[12px] uppercase text-green-700 font-semibold">
-                    Selected User
+                <div className="relative">
+                  <input
+                    className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
+                    type="search"
+                    placeholder="search user"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchTerm}
+                  />
+                  {searchResults.length > 0 && (
+                    <ul className="absolute left-0 right-0 mt-1 border rounded-md bg-white max-h-40 overflow-y-auto z-10">
+                      {searchResults.map((user) => (
+                        <li
+                          key={user.id}
+                          className="p-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => handleUserSelect(user)}
+                        >
+                          {user.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div
+                  className={` ${
+                    selectedUser ? "bg-green-100" : "bg-red-100"
+                  } gap-2 mt-2  p-2 rounded-md`}
+                >
+                  <span
+                    className={`text-[12px] uppercase ${
+                      selectedUser ? "text-green-700" : "text-red-700"
+                    } font-semibold`}
+                  >
+                    {selectedUser ? "Selected User" : "Please Search Username"}
                   </span>
                   <p className="text-[14px] uppercase text-gray-500">
-                    ID: <span className="text-gray-700">002</span>
+                    ID:{" "}
+                    <span className="text-gray-700">{selectedUser?.id}</span>
                   </p>
                   <p className="text-[14px] uppercase text-gray-500">
-                    Name: <span className="text-gray-700">John Doe</span>
+                    Name:{" "}
+                    <span className="text-gray-700">{selectedUser?.name}</span>
                   </p>
                 </div>
 
