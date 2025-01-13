@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import ProductList from "../_components/ProductList";
 import Spinner from "../_components/Spinner";
-import { getAvailableStock } from "../_lib/api";
 import SearchBar from "../_components/SearchBar";
+import Modal from "../_components/Modal";
 
 type AvailablePageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -22,7 +22,9 @@ export default async function Available({ searchParams }: AvailablePageProps) {
 
       <SearchBar />
 
-      <Suspense fallback={<Spinner />} key={query}>
+      {/* <Modal /> */}
+
+      <Suspense fallback={<Spinner className="mt-6" />} key={query}>
         <ProductList query={query} />
       </Suspense>
     </div>

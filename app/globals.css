@@ -17,3 +17,16 @@
 body {
   /* background: var(--background); */
 }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-slow {
+  animation: spin 2s linear infinite !important;
+}
