@@ -1,12 +1,10 @@
 "use client";
 import { CgSpinner } from "react-icons/cg";
 
-function Spinner({ className }: { className?: string }) {
+function Spinner({ className, size }: { className?: string; size?: number }) {
   return (
-    <div
-      className={`${className} w-full h-full flex items-center justify-center`}
-    >
-      <CgSpinner className="animate-spin" size={30} />
+    <div className={`${className} items-center justify-center`}>
+      <CgSpinner className="animate-spin" size={size} />
     </div>
   );
 }

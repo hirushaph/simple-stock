@@ -5,6 +5,7 @@ declare global {
       APPWRITE_APIKEY: string;
       APPWRITE_DATABASE_ID: string;
       APPWRITE_ITEMS_COLLECTION_ID: string;
+      APPWRITE_USERS_COLLECIION_ID: string;
       APPWRITE_ENDPOINT: string;
     }
   }

@@ -10,13 +10,10 @@ type AvailablePageProps = {
 };
 
 export default async function Available({ searchParams }: AvailablePageProps) {
-  const sessionCookie = (await cookies()).get("session");
   const params = await searchParams;
   const query = Array.isArray(params.search)
     ? params.search.join(",")
     : params.search || "";
-
-  console.log(query);
 
   return (
     <div className="px-4">
@@ -27,7 +24,7 @@ export default async function Available({ searchParams }: AvailablePageProps) {
       {/* <Modal /> */}
 
       <Suspense fallback={<Spinner className="mt-6" />} key={query}>
-        <ProductList query={query} sessionCookie={sessionCookie} />
+        <ProductList query={query} />
       </Suspense>
     </div>
   );

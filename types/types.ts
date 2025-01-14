@@ -15,3 +15,8 @@ export type SessionCookie = {
   secure?: boolean;
   sameSite?: "Strict" | "Lax" | "None";
 };
+
+export type ItemUser = {
+  name: string;
+  id: number;
+};

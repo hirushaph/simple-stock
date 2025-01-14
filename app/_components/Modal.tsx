@@ -1,10 +1,11 @@
 "use client";
-import { StockItemType } from "@/types/types";
+import { ItemUser, StockItemType } from "@/types/types";
 import { useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { createPortal } from "react-dom";
 import Button from "./Button";
 import { motion, AnimatePresence } from "framer-motion";
+import Spinner from "./Spinner";
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -18,8 +19,8 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [searchResults, setSearchResults] = useState<ItemUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -37,7 +38,6 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     if (!isModalOpen) return;
 
     const fetchUsers = async () => {
-      setIsLoading(true);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -45,26 +45,24 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
       abortControllerRef.current = abortController;
 
       try {
+        setIsLoading(true);
         const res = await fetch(`/api/users?query=${searchTerm}`, {
           signal: abortController.signal,
         });
         if (!res.ok) {
           throw new Error(`Error: ${res.statusText}`);
         }
-        const data = await res.json();
-        setSearchResults(data);
+        const data = (await res.json()) as { documents: ItemUser[] };
+        setSearchResults(data.documents);
+        setIsLoading(false);
       } catch (error: unknown) {
         if (error instanceof Error) {
           if (error.name === "AbortError") {
             console.log("Request canceled");
           } else {
-            setIsLoading(false);
           }
         } else {
-          setIsLoading(false);
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -87,7 +85,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     setSelectedUser(null);
   }
 
-  function handleUserSelect(user) {
+  function handleUserSelect(user: ItemUser) {
     setSelectedUser(user);
     setSearchResults([]);
   }
@@ -135,7 +133,10 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                 </p>
               </div>
               <div>
-                <h3 className="text-sm text-gray-500">Issued to</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm text-gray-500">Issued to </h3>
+                  {isLoading && <Spinner className=" inline-block" size={18} />}
+                </div>
                 <div className="relative">
                   <input
                     className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
@@ -144,8 +145,8 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     value={searchTerm}
                   />
-                  {searchResults.length > 0 && (
-                    <ul className="absolute left-0 right-0 mt-1 border rounded-md bg-white max-h-40 overflow-y-auto z-10">
+                  {searchResults?.length > 0 && (
+                    <ul className="absolute left-0 right-0 mt-1 rounded-md bg-white max-h-40 overflow-y-auto z-10 shadow-lg border-2 border-gray-400">
                       {searchResults.map((user) => (
                         <li
                           key={user.id}

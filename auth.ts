@@ -14,6 +14,7 @@ type Auth = {
   sessionCookie?: SessionCookie;
   getUser: () => Promise<Models.User<Models.Preferences> | undefined>;
   createSession: (formData: FormData) => Promise<void>;
+  deteleSession: () => Promise<void>;
 };
 
 const auth: Auth = {
@@ -63,6 +64,25 @@ const auth: Auth = {
 
       redirect("/");
     }
+  },
+
+  deteleSession: async () => {
+    "use server";
+
+    auth.sessionCookie = (await cookies()).get("session");
+
+    try {
+      const sessionClient = await createSessionClient(
+        auth.sessionCookie?.value
+      );
+
+      await sessionClient?.account.deleteSession("current");
+    } catch (error) {}
+
+    (await cookies()).delete("session");
+    auth.user = null;
+    auth.sessionCookie = undefined;
+    redirect("/login");
   },
 };
 

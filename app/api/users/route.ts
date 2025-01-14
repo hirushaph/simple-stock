@@ -1,35 +1,44 @@
-// app/api/users/route.js
+import { createSessionClient } from "@/appwrite/config";
+import { cookies } from "next/headers";
+import { Query } from "node-appwrite";
+
 export async function GET(request: Request) {
+  const sessionCookie = (await cookies()).get("session");
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query") || "";
 
-  // Simulating a user database
-  const users = [
-    { id: 1, name: "John Doe" },
-    { id: 2, name: "Jane Smith" },
-    { id: 3, name: "Alice Johnson" },
-    { id: 4, name: "Bob Brown" },
-  ];
+  try {
+    if (!query) {
+      return Response.json([]);
+    }
+    const sessionClient = await createSessionClient(sessionCookie?.value);
 
-  // // Artificial delay function
-  // const delay = (ms: number) =>
-  //   new Promise((resolve) => setTimeout(resolve, ms));
+    if (sessionClient === null) {
+      return Response.json("Configuration Error", { status: 500 });
+    }
 
-  // // Adding a 2-second delay
-  // await delay(2000);
-
-  if (query) {
-    const filteredUsers = users.filter((user) =>
-      user.name.toLowerCase().includes(query.toLowerCase())
+    const { documents, total } = await sessionClient.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_USERS_COLLECIION_ID,
+      [Query.contains("name", query)]
     );
-    return new Response(JSON.stringify(filteredUsers), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
 
-  return new Response(JSON.stringify([]), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+    return Response.json({ documents, total });
+  } catch (error) {
+    if (error instanceof Error) {
+      return Response.json(
+        { error: error.message },
+        {
+          status: 403,
+        }
+      );
+    } else {
+      return Response.json(
+        { error: "An unknown error occurred" },
+        {
+          status: 403,
+        }
+      );
+    }
+  }
 }
