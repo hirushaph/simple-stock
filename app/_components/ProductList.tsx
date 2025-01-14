@@ -1,8 +1,15 @@
+import { SessionCookie } from "@/types/types";
 import { getFilterdStock } from "../_lib/api";
 import ProductGrid from "./ProductGrid";
 
-async function ProductList({ query }: { query?: string | string[] }) {
-  const data = await getFilterdStock(query);
+async function ProductList({
+  query,
+  sessionCookie,
+}: {
+  query?: string | string[];
+  sessionCookie?: SessionCookie;
+}) {
+  const data = await getFilterdStock(query, sessionCookie);
   // const length = Object.keys(data).length;
 
   return (

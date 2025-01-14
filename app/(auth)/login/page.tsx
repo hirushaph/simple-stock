@@ -1,11 +1,19 @@
-function page() {
+import auth from "@/auth";
+import { redirect } from "next/navigation";
+
+async function page() {
+  const user = await auth.getUser();
+  if (user) {
+    return redirect("/");
+  }
+
   return (
     <div className="bg-white w-[400px] p-6 shadow-md rounded-md">
       <h1 className="text-xl uppercase font-semibold text-center">Login</h1>
       <p className="text-sm text-gray-500 text-center mt-1">
         Login to your account
       </p>
-      <form className="mt-4">
+      <form className="mt-4" action={auth.createSession}>
         <div>
           <label className="text-sm font-normal text-gray-500" htmlFor="email">
             Email
@@ -14,6 +22,7 @@ function page() {
             type="email"
             name="email"
             placeholder="Username"
+            defaultValue="shadow@test.com"
             className="w-full border border-gray-300 rounded-md px-2 py-[6px] text-sm font-normal outline-none focus:border-blue-400 focus:shadow-md"
           />
         </div>
@@ -25,6 +34,7 @@ function page() {
             type="password"
             name="password"
             placeholder="Password"
+            defaultValue="pass1234"
             className="w-full border border-gray-300 rounded-md px-2 py-[6px] text-sm font-normal outline-none focus:border-blue-400 focus:shadow-md"
           />
         </div>

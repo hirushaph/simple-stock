@@ -30,4 +30,32 @@ const createAdminClient = async (): Promise<AdminClient | null> => {
   };
 };
 
-export { createAdminClient };
+const createSessionClient = async (session) => {
+  if (!session) {
+    throw new Error("No session");
+  }
+  const endpoint = process.env.APPWRITE_ENDPOINT;
+  const projectId = process.env.APPWRITE_PROJECTID;
+
+  if (!endpoint || !projectId) {
+    console.error("Missing Appwrite configuration");
+    return null;
+  }
+
+  const client = new Client().setEndpoint(endpoint).setProject(projectId);
+
+  if (session) {
+    client.setSession(session);
+  }
+
+  return {
+    get account(): Account {
+      return new Account(client);
+    },
+    get databases(): Databases {
+      return new Databases(client);
+    },
+  };
+};
+
+export { createAdminClient, createSessionClient };

@@ -1,4 +1,4 @@
-import { StockItemType } from "@/types/types";
+import { SessionCookie, StockItemType } from "@/types/types";
 
 // export async function getAvailableStock(): Promise<StockItemType[]> {
 //   const result = await databases.listDocuments(
@@ -48,14 +48,19 @@ type ProductApiResults = {
 };
 
 export async function getFilterdStock(
-  query?: string | string[]
+  query?: string | string[],
+  sessionCookie?: SessionCookie
 ): Promise<ProductApiResults> {
   const baseurl = "http://localhost:3000";
   const endpoint = query
     ? `${baseurl}/api/products?search=${query}`
     : `${baseurl}/api/products`;
 
-  const res = await fetch(endpoint);
+  const res = await fetch(endpoint, {
+    headers: {
+      Cookie: `session=${sessionCookie?.value}`,
+    },
+  });
 
   const data = await res.json();
 
