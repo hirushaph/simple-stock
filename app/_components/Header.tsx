@@ -4,7 +4,7 @@ function Header() {
   return (
     <header className="flex w-full justify-between items-center bg-white px-5 border-b border-b-darkGrey row-span-1 col-span-2">
       <div className="logo">
-        <h1 className="text-xl font-semibold">Simple Stock</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Simple Stock</h1>
       </div>
       <div className="flex justify-end items-center gap-3">
         <span className="text-sm font-light text-gray-600">username</span>
