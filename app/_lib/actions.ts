@@ -23,9 +23,10 @@ export async function issueItem(
     process.env.APPWRITE_BORROWED_COLLECTION_ID,
     ID.unique(),
     {
-      sku: item.sku,
-      userId: user.id,
+      item: item.id,
+      employer: user.$id,
       quantity,
+      returned: false,
     }
   );
 

@@ -19,5 +19,6 @@ export type SessionCookie = {
 
 export type ItemUser = {
   name: string;
-  id: number;
+  eid: number;
+  $id: string;
 };

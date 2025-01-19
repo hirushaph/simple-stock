@@ -5,7 +5,7 @@ import { Query } from "node-appwrite";
 export async function GET(request: Request) {
   const sessionCookie = (await cookies()).get("session");
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get("query") || "";
+  const query = searchParams.get("query") || "j";
 
   try {
     if (!query) {
