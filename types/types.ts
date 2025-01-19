@@ -1,4 +1,5 @@
 export type StockItemType = {
+  id: string;
   name: string;
   sku: string;
   stock: number;

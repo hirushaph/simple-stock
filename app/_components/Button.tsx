@@ -4,9 +4,10 @@ interface ButtonProps {
   onClick: () => void;
   children: React.ReactNode;
   variant: "success" | "cancel" | "danger" | "done";
+  disabled?: boolean;
 }
 
-function Button({ onClick, children, variant }: ButtonProps) {
+function Button({ onClick, children, variant, disabled }: ButtonProps) {
   const baseClasses =
     "px-4 py-[6px] uppercase text-[14px] font-semibold rounded-md transition-colors duration-200";
   const variantClasses = {
@@ -21,8 +22,9 @@ function Button({ onClick, children, variant }: ButtonProps) {
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses[variant]}`}
+      className={`${baseClasses} ${variantClasses[variant]} disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed`}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </button>

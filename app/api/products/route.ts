@@ -23,13 +23,16 @@ export async function GET(request: Request) {
       config
     );
 
+    console.log(documents);
+
     const filterdDocuments = documents.map(
-      ({ name, sku, stock, image }) =>
+      ({ name, sku, stock, image, $id }) =>
         ({
           name,
           sku,
           stock,
           image,
+          id: $id,
         } as StockItemType)
     );
 

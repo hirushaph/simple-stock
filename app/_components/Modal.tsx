@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import Button from "./Button";
 import { motion, AnimatePresence } from "framer-motion";
 import Spinner from "./Spinner";
+import { issueItem } from "../_lib/actions";
+import { Bounce, toast } from "react-toastify";
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -21,6 +23,8 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<ItemUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  const [isButtonLoading, setIsButtonLoading] = useState<boolean>(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -88,6 +92,29 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   function handleUserSelect(user: ItemUser) {
     setSelectedUser(user);
     setSearchResults([]);
+  }
+
+  async function handleIssueItem(
+    item: StockItemType,
+    selectedUser: ItemUser,
+    selectedQuantity: number
+  ) {
+    try {
+      setIsButtonLoading(true);
+      const borrowedItem = await issueItem(
+        item,
+        selectedUser,
+        selectedQuantity
+      );
+
+      toast.success("Item issued to user");
+
+      setIsButtonLoading(false);
+      onCloseModal();
+    } catch (error) {
+      setIsButtonLoading(false);
+      toast.error(error.message);
+    }
   }
 
   return createPortal(
@@ -187,7 +214,10 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                     className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
                     type="number"
                     placeholder="Quantity"
-                    defaultValue={1}
+                    defaultValue={selectedQuantity}
+                    onChange={(e) =>
+                      setSelectedQuantity(Number(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -196,7 +226,13 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
               <Button onClick={onCloseModal} variant="cancel">
                 Cansal
               </Button>
-              <Button onClick={onCloseModal} variant="success">
+              <Button
+                onClick={() =>
+                  handleIssueItem(item, selectedUser, selectedQuantity)
+                }
+                variant="success"
+                disabled={isButtonLoading}
+              >
                 Issue Item
               </Button>
             </div>
