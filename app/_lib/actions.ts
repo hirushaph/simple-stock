@@ -11,16 +11,15 @@ export async function issueItem(
   user: ItemUser,
   quantity: number
 ) {
-  console.log("server action runnded");
+  console.log("server action run");
 
-  console.log(item);
   const sessionCookie = (await cookies()).get("session");
-
   const sessionClient = await createSessionClient(sessionCookie?.value);
 
-  const borrowed = await sessionClient?.databases.createDocument(
-    process.env.APPWRITE_DATABASE_ID,
-    process.env.APPWRITE_BORROWED_COLLECTION_ID,
+  // Prepare requests
+  const createBorrowedDocument = sessionClient?.databases.createDocument(
+    process.env.APPWRITE_DATABASE_ID!,
+    process.env.APPWRITE_BORROWED_COLLECTION_ID!,
     ID.unique(),
     {
       item: item.id,
@@ -30,18 +29,20 @@ export async function issueItem(
     }
   );
 
-  //   update item
-
-  const result = await sessionClient?.databases.updateDocument(
-    process.env.APPWRITE_DATABASE_ID,
-    process.env.APPWRITE_ITEMS_COLLECTION_ID,
-    item.id, // documentId
+  const updateStock = sessionClient?.databases.updateDocument(
+    process.env.APPWRITE_DATABASE_ID!,
+    process.env.APPWRITE_ITEMS_COLLECTION_ID!,
+    item.id,
     {
       stock: item.stock - quantity,
     }
   );
 
-  revalidatePath("/available");
+  // Execute requests
+  const [borrowed, updatedItem] = await Promise.all([
+    createBorrowedDocument,
+    updateStock,
+  ]);
 
-  console.log(result);
+  revalidatePath("/available");
 }
