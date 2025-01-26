@@ -1,5 +1,10 @@
-import { SessionCookie, StockItemType } from "@/types/types";
+import { StockItemType, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
+import { DATABASE_ID, ITEM_COLLECTION_ID } from "./const";
+import { databases } from "./appwrite";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/appwrite/config";
+import { Models } from "node-appwrite";
 
 // export async function getAvailableStock(): Promise<StockItemType[]> {
 //   const result = await databases.listDocuments(
@@ -61,4 +66,28 @@ export async function getFilterdStock(
   const data = await res.json();
 
   return data;
+}
+
+export async function getTransactions(): Promise<{
+  documents: TransactionType[];
+  total: number;
+}> {
+  const sessionCookie = (await cookies()).get("session");
+
+  const sessionClient = await createSessionClient(sessionCookie?.value);
+
+  if (!sessionClient) throw new Error("Session not found");
+
+  const {
+    documents,
+    total,
+  }: {
+    documents: TransactionType[];
+    total: number;
+  } = await sessionClient?.databases.listDocuments(
+    process.env.APPWRITE_DATABASE_ID,
+    process.env.APPWRITE_BORROWED_COLLECTION_ID
+  );
+
+  return { documents, total };
 }

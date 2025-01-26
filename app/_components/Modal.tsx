@@ -1,14 +1,13 @@
 "use client";
+import { ItemUser, StockItemType } from "@/types/types";
 import { useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Bounce, toast } from "react-toastify";
-
 import Button from "./Button";
+import { motion, AnimatePresence } from "framer-motion";
 import Spinner from "./Spinner";
 import { issueItem } from "../_lib/actions";
-import { ItemUser, StockItemType } from "@/types/types";
+import { toast } from "react-toastify";
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -18,17 +17,20 @@ type ModalProps = {
 
 function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [isClient, setIsClient] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState<ItemUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
-  const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [isButtonLoading, setIsButtonLoading] = useState(false);
-
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<ItemUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  const [isButtonLoading, setIsButtonLoading] = useState<boolean>(false);
+
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => setIsClient(true), []);
+  useEffect(() => {
+    setIsClient(true); // Ensure component is rendered on client-side
+  }, []);
 
   useEffect(() => {
     if (isModalOpen && isClient) {
@@ -37,7 +39,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   }, [isModalOpen, isClient]);
 
   useEffect(() => {
-    if (!isModalOpen || !searchTerm) return;
+    if (!isModalOpen) return;
 
     const fetchUsers = async () => {
       if (abortControllerRef.current) {
@@ -51,64 +53,69 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
         const res = await fetch(`/api/users?query=${searchTerm}`, {
           signal: abortController.signal,
         });
-
         if (!res.ok) {
-          throw new Error(res.statusText);
+          throw new Error(`Error: ${res.statusText}`);
         }
-
         const data = (await res.json()) as { documents: ItemUser[] };
-        setUsers(data.documents);
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          toast.error("Failed to fetch users");
-        }
-      } finally {
+        setSearchResults(data.documents);
         setIsLoading(false);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          if (error.name === "AbortError") {
+            console.log("Request canceled");
+          } else {
+          }
+        } else {
+        }
       }
     };
 
     fetchUsers();
 
-    return () => abortControllerRef.current?.abort();
-  }, [searchTerm, isModalOpen]);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [isModalOpen, searchTerm]);
 
-  const onCloseModal = () => {
+  if (!isClient) return null; // Prevent server-side rendering issues
+
+  function onCloseModal() {
     dialogRef.current?.close();
     setIsModalOpen(false);
-    resetModalState();
-  };
-
-  const resetModalState = () => {
     setSearchTerm("");
-    setUsers([]);
+    setSearchResults([]);
     setSelectedUser(null);
-    setSelectedQuantity(1);
-  };
+  }
 
-  const handleUserSelect = (user: ItemUser) => {
+  function handleUserSelect(user: ItemUser) {
     setSelectedUser(user);
-    setUsers([]);
-  };
+    setSearchResults([]);
+  }
 
-  const handleIssueItem = async () => {
-    if (!item || !selectedUser) {
-      toast.error("Please select an item and user");
-      return;
-    }
-
+  async function handleIssueItem(
+    item: StockItemType,
+    selectedUser: ItemUser,
+    selectedQuantity: number
+  ) {
     try {
       setIsButtonLoading(true);
-      await issueItem(item, selectedUser, selectedQuantity);
-      toast.success("Item issued successfully", { transition: Bounce });
-      onCloseModal();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to issue item");
-    } finally {
-      setIsButtonLoading(false);
-    }
-  };
+      const borrowedItem = await issueItem(
+        item,
+        selectedUser,
+        selectedQuantity
+      );
 
-  if (!isClient) return null;
+      toast.success("Item issued to user");
+
+      setIsButtonLoading(false);
+      onCloseModal();
+    } catch (error) {
+      setIsButtonLoading(false);
+      toast.error(error.message);
+    }
+  }
 
   return createPortal(
     <AnimatePresence>
@@ -121,13 +128,12 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 bg-black"
           />
-
           <motion.dialog
-            ref={dialogRef}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.3 }}
+            ref={dialogRef}
             className="bg-white shadow-md w-[600px] p-4 rounded-md z-50 fixed inset-0 m-auto"
           >
             <div className="flex justify-between items-center">
@@ -136,8 +142,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                 <IoClose size={22} />
               </button>
             </div>
-
-            <div className="mt-4 grid grid-cols-[1fr_2fr] py-4 gap-3">
+            <div className="mt-4 body grid grid-cols-[1fr_2fr] py-4 gap-3">
               <div className="border rounded-md p-2">
                 <img
                   src={item?.image}
@@ -148,32 +153,32 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                   {item?.name}
                 </h2>
                 <p className="text-sm font-semibold mt-2 text-gray-600 py-1 px-2 rounded-2xl bg-green-100 text-center">
-                  Stock: <span className="text-green-600">{item?.stock}</span>
+                  Stock :{" "}
+                  <span className="text-green-600 font-semibold">
+                    {item?.stock}
+                  </span>
                 </p>
               </div>
-
               <div>
                 <div className="flex items-center gap-3">
-                  <h3 className="text-sm text-gray-500">Issued to</h3>
-                  {isLoading && <Spinner size={18} />}
+                  <h3 className="text-sm text-gray-500">Issued to </h3>
+                  {isLoading && <Spinner className=" inline-block" size={18} />}
                 </div>
-
                 <div className="relative">
                   <input
+                    className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
                     type="search"
-                    placeholder="Search user"
-                    value={searchTerm}
+                    placeholder="search user"
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    value={searchTerm}
                   />
-
-                  {users.length > 0 && (
-                    <ul className="absolute left-0 right-0 mt-1 rounded-md bg-white max-h-40 overflow-y-auto z-10 shadow-lg border">
-                      {users.map((user) => (
+                  {searchResults?.length > 0 && (
+                    <ul className="absolute left-0 right-0 mt-1 rounded-md bg-white max-h-40 overflow-y-auto z-10 shadow-lg border-2 border-gray-400">
+                      {searchResults.map((user) => (
                         <li
                           key={user.eid}
-                          onClick={() => handleUserSelect(user)}
                           className="p-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => handleUserSelect(user)}
                         >
                           {user.name}
                         </li>
@@ -181,60 +186,56 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                     </ul>
                   )}
                 </div>
-
                 <div
-                  className={`${
+                  className={` ${
                     selectedUser ? "bg-green-100" : "bg-red-100"
-                  } gap-2 mt-2 p-2 rounded-md`}
+                  } gap-2 mt-2  p-2 rounded-md`}
                 >
                   <span
-                    className={`text-xs uppercase font-semibold ${
+                    className={`text-[12px] uppercase ${
                       selectedUser ? "text-green-700" : "text-red-700"
-                    }`}
+                    } font-semibold`}
                   >
                     {selectedUser ? "Selected User" : "Please Search Username"}
                   </span>
-
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      ID:{" "}
-                      <span className="text-gray-700">{selectedUser?.eid}</span>
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Name:{" "}
-                      <span className="text-gray-700">
-                        {selectedUser?.name}
-                      </span>
-                    </p>
-                  </div>
+                  <p className="text-[14px] uppercase text-gray-500">
+                    ID:{" "}
+                    <span className="text-gray-700">{selectedUser?.id}</span>
+                  </p>
+                  <p className="text-[14px] uppercase text-gray-500">
+                    Name:{" "}
+                    <span className="text-gray-700">{selectedUser?.name}</span>
+                  </p>
                 </div>
 
-                <div className="mt-4">
-                  <h3 className="text-sm text-gray-500">Quantity</h3>
+                <div>
+                  <h3 className="text-sm text-gray-500 mt-2">Quantity</h3>
                   <input
+                    className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
                     type="number"
-                    value={selectedQuantity}
+                    placeholder="Quantity"
+                    defaultValue={selectedQuantity}
                     onChange={(e) =>
                       setSelectedQuantity(Number(e.target.value))
                     }
-                    className="w-full px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition"
                   />
                 </div>
               </div>
             </div>
-
-            <footer className="flex justify-end gap-4 mt-4">
+            <div className="footer flex justify-end items-center gap-4 mt-4">
               <Button onClick={onCloseModal} variant="cancel">
-                Cancel
+                Cansal
               </Button>
               <Button
-                onClick={handleIssueItem}
+                onClick={() =>
+                  handleIssueItem(item, selectedUser, selectedQuantity)
+                }
                 variant="success"
                 disabled={isButtonLoading}
               >
-                {isButtonLoading ? "Processing..." : "Issue Item"}
+                Issue Item
               </Button>
-            </footer>
+            </div>
           </motion.dialog>
         </>
       )}
