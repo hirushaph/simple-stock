@@ -1,13 +1,21 @@
+import IssueButton from "@/app/_components/IssueButton";
+import Pagination from "@/app/_components/Pagination";
 import { getTransactions } from "@/app/_lib/api";
 import { formatTimestamp } from "@/utils/helpers";
 
-async function page() {
-  const { documents, total } = await getTransactions();
+async function page({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string }>;
+}) {
+  const params = await searchParams;
+  const pageNumber = Number(params?.page) || 1;
+  const { documents, total } = await getTransactions(pageNumber);
   return (
     <div className="px-4">
       <h1 className="text-xl font-medium">History</h1>
 
-      <div>
+      <div className="mb-3">
         <table className="w-full bg-white border-collapse">
           <thead className="bg-gray-300">
             <tr className="text-sm text-gray-700 text-left">
@@ -32,22 +40,20 @@ async function page() {
                 <td className="px-4 py-3 border-r">
                   {formatTimestamp(transaction.$createdAt)}
                 </td>
-                <td className="border-r">
+                <td className="px-4 py-3 border-r">
                   {formatTimestamp(transaction.returnedDate)}
                 </td>
-                <td>
-                  <div className="flex justify-center items-center gap-2">
-                    <input type="checkbox" name="returned" id="" />
-                    <span className="bg-red-200 rounded-xl px-4 py-1 text-[12px] font-semibold uppercase text-red-600">
-                      issued
-                    </span>
-                  </div>
+                <td className="px-4">
+                  <IssueButton isRecived={transaction.returned} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <Pagination total={total} />
     </div>
   );
 }

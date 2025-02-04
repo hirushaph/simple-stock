@@ -1,2 +1,1 @@
-export const DATABASE_ID = "677ab91000062f627064";
-export const ITEM_COLLECTION_ID = "677ab91c00394def4c92";
+export const ITEMS_PER_PAGE = 5;

@@ -1,10 +1,10 @@
 import { StockItemType, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
-import { DATABASE_ID, ITEM_COLLECTION_ID } from "./const";
+import { ITEMS_PER_PAGE } from "./const";
 import { databases } from "./appwrite";
 import { cookies } from "next/headers";
 import { createSessionClient } from "@/appwrite/config";
-import { Models } from "node-appwrite";
+import { Models, Query } from "node-appwrite";
 
 // export async function getAvailableStock(): Promise<StockItemType[]> {
 //   const result = await databases.listDocuments(
@@ -68,7 +68,7 @@ export async function getFilterdStock(
   return data;
 }
 
-export async function getTransactions(): Promise<{
+export async function getTransactions(pageNo: number = 1): Promise<{
   documents: TransactionType[];
   total: number;
 }> {
@@ -78,6 +78,9 @@ export async function getTransactions(): Promise<{
 
   if (!sessionClient) throw new Error("Session not found");
 
+  // calculate offset
+  const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+
   const {
     documents,
     total,
@@ -86,8 +89,12 @@ export async function getTransactions(): Promise<{
     total: number;
   } = await sessionClient?.databases.listDocuments(
     process.env.APPWRITE_DATABASE_ID,
-    process.env.APPWRITE_BORROWED_COLLECTION_ID
+    process.env.APPWRITE_BORROWED_COLLECTION_ID,
+    [
+      Query.limit(ITEMS_PER_PAGE),
+      Query.offset(offset),
+      Query.orderDesc("$createdAt"),
+    ]
   );
-
   return { documents, total };
 }
