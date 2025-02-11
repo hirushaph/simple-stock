@@ -44,7 +44,7 @@ async function page({
                   {formatTimestamp(transaction.returnedDate)}
                 </td>
                 <td className="px-4">
-                  <IssueButton isRecived={transaction.returned} />
+                  <IssueButton transaction={transaction} />
                 </td>
               </tr>
             ))}

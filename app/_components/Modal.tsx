@@ -101,13 +101,12 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   ) {
     try {
       setIsButtonLoading(true);
-      const borrowedItem = await issueItem(
-        item,
-        selectedUser,
-        selectedQuantity
-      );
 
-      toast.success("Item issued to user");
+      await toast.promise(issueItem(item, selectedUser, selectedQuantity), {
+        pending: "Issuing item...",
+        success: "Item issued",
+        error: "Update failed",
+      });
 
       setIsButtonLoading(false);
       onCloseModal();
