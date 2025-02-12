@@ -1,7 +1,7 @@
 import { Models } from "node-appwrite";
 
 export type StockItemType = {
-  id: string;
+  $id: string;
   name: string;
   sku: string;
   stock: number;

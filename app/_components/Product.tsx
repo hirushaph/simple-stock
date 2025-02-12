@@ -5,15 +5,21 @@ import { StockItemType } from "@/types/types";
 function Product({
   item,
   onModalOpen,
+  stock,
+  children,
+  cursor = "pointer",
 }: {
   item: StockItemType;
-  onModalOpen: (item: StockItemType) => void;
+  onModalOpen?: (item: StockItemType) => void;
+  stock?: number;
+  children?: React.ReactNode;
+  cursor?: "default" | "pointer";
 }) {
   return (
     <div
       key={item.sku}
-      className="bg-white p-3 rounded-md shadow-sm cursor-pointer"
-      onClick={() => onModalOpen(item)}
+      className={`bg-white p-3 rounded-md shadow-sm cursor-${cursor}`}
+      {...(onModalOpen && { onClick: () => onModalOpen(item) })}
     >
       <div className="rounded-md overflow-hidden relative aspect-[4/3] ">
         <img
@@ -25,10 +31,12 @@ function Product({
       </div>
       <div className="mt-2 flex justify-between items-center">
         <h2 className="text-[16px]">{item.name}</h2>
+
         <div className=" bg-green-100 text-sm rounded-[50%] w-6 h-6 flex items-center justify-center">
-          {item.stock}
+          {stock || item.stock}
         </div>
       </div>
+      {children}
     </div>
   );
 }

@@ -15,7 +15,7 @@ async function page({
     <div className="px-4">
       <h1 className="text-xl font-medium">History</h1>
 
-      <div className="mb-3">
+      <div className="mb-3 mt-2">
         <table className="w-full bg-white border-collapse">
           <thead className="bg-gray-300">
             <tr className="text-sm text-gray-700 text-left">

@@ -98,3 +98,25 @@ export async function getTransactions(pageNo: number = 1): Promise<{
   );
   return { documents, total };
 }
+
+export async function getIssuedItems() {
+  const sessionCookie = (await cookies()).get("session");
+
+  const sessionClient = await createSessionClient(sessionCookie?.value);
+
+  if (!sessionClient) throw new Error("Session not found");
+
+  const {
+    documents,
+    total,
+  }: {
+    documents: TransactionType[];
+    total: number;
+  } = await sessionClient?.databases.listDocuments(
+    process.env.APPWRITE_DATABASE_ID,
+    process.env.APPWRITE_BORROWED_COLLECTION_ID,
+    [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
+  );
+
+  return { documents, total };
+}
