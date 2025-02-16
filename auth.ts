@@ -43,6 +43,7 @@ const auth: Auth = {
 
   createSession: async (formData: FormData) => {
     "use server";
+
     const data = Object.fromEntries(formData);
     const { email, password } = data as { email: string; password: string };
 
@@ -53,17 +54,20 @@ const auth: Auth = {
       password
     );
 
-    if (session) {
-      (await cookies()).set("session", session.secret, {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: true,
-        expires: new Date(session.expire),
-        path: "/",
-      });
+    if (!session) throw new Error("Authentication Failed");
 
-      redirect("/");
-    }
+    console.log("hello");
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", session.secret, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+      expires: new Date(session.expire),
+      path: "/",
+    });
+
+    redirect("/");
   },
 
   deteleSession: async () => {

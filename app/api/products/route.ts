@@ -30,7 +30,7 @@ export async function GET(request: Request) {
           sku,
           stock,
           image,
-          id: $id,
+          $id,
         } as StockItemType)
     );
 

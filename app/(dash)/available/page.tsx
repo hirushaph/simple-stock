@@ -2,8 +2,6 @@ import { Suspense } from "react";
 import ProductList from "../../_components/ProductList";
 import Spinner from "../../_components/Spinner";
 import SearchBar from "../../_components/SearchBar";
-import Modal from "../../_components/Modal";
-import { cookies } from "next/headers";
 
 type AvailablePageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

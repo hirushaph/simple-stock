@@ -19,11 +19,13 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [isClient, setIsClient] = useState(false);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<ItemUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
-  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  const [selectedUser, setSelectedUser] = useState<ItemUser | undefined>(
+    undefined
+  );
+  const [selectedQuantity, setSelectedQuantity] = useState<number | "">(1);
   const [isButtonLoading, setIsButtonLoading] = useState<boolean>(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -86,7 +88,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     setIsModalOpen(false);
     setSearchTerm("");
     setSearchResults([]);
-    setSelectedUser(null);
+    setSelectedUser(undefined);
   }
 
   function handleUserSelect(user: ItemUser) {
@@ -94,26 +96,41 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     setSearchResults([]);
   }
 
+  function handleQuanityChange(quantity: string) {
+    if (!item) return;
+    if (quantity === "") {
+      setSelectedQuantity(quantity);
+      return;
+    }
+
+    const numericQuantity = Number(quantity);
+    if (item.stock >= numericQuantity && numericQuantity >= 1) {
+      setSelectedQuantity(numericQuantity);
+    }
+  }
+
   async function handleIssueItem(
-    item: StockItemType,
-    selectedUser: ItemUser,
-    selectedQuantity: number
+    item?: StockItemType,
+    selectedUser?: ItemUser,
+    selectedQuantity?: number | ""
   ) {
     try {
+      if (!item || !selectedUser || !selectedQuantity) return;
       setIsButtonLoading(true);
-      const borrowedItem = await issueItem(
-        item,
-        selectedUser,
-        selectedQuantity
-      );
 
-      toast.success("Item issued to user");
+      await toast.promise(issueItem(item, selectedUser, selectedQuantity), {
+        pending: "Issuing item...",
+        success: "Item issued",
+        error: "Update failed",
+      });
 
       setIsButtonLoading(false);
       onCloseModal();
-    } catch (error) {
+    } catch (error: unknown) {
       setIsButtonLoading(false);
-      toast.error(error.message);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
     }
   }
 
@@ -152,10 +169,18 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                 <h2 className="text-sm font-semibold mt-2 text-gray-700 text-center">
                   {item?.name}
                 </h2>
-                <p className="text-sm font-semibold mt-2 text-gray-600 py-1 px-2 rounded-2xl bg-green-100 text-center">
-                  Stock :{" "}
-                  <span className="text-green-600 font-semibold">
-                    {item?.stock}
+                <p
+                  className={`${
+                    item?.stock === 0 ? "bg-red-100" : ""
+                  } text-sm font-semibold mt-2 text-gray-600 py-1 px-2 rounded-2xl bg-green-100 text-center`}
+                >
+                  {item?.stock === 0 ? "Out of Stock" : "Stock : "}
+                  <span
+                    className={`${
+                      item?.stock === 0 ? "text-red-600" : ""
+                    } text-green-600 font-semibold`}
+                  >
+                    {item?.stock === 0 ? "" : item?.stock}
                   </span>
                 </p>
               </div>
@@ -200,7 +225,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                   </span>
                   <p className="text-[14px] uppercase text-gray-500">
                     ID:{" "}
-                    <span className="text-gray-700">{selectedUser?.id}</span>
+                    <span className="text-gray-700">{selectedUser?.eid}</span>
                   </p>
                   <p className="text-[14px] uppercase text-gray-500">
                     Name:{" "}
@@ -208,16 +233,17 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                   </p>
                 </div>
 
+                {/* Quantity */}
+
                 <div>
                   <h3 className="text-sm text-gray-500 mt-2">Quantity</h3>
                   <input
                     className="px-4 py-1 mt-2 border bg-slate-200 rounded-md outline-none focus:ring-2 focus:ring-blue-400 transition text-sm font-normal w-full"
                     type="number"
                     placeholder="Quantity"
-                    defaultValue={selectedQuantity}
-                    onChange={(e) =>
-                      setSelectedQuantity(Number(e.target.value))
-                    }
+                    value={selectedQuantity}
+                    onChange={(e) => handleQuanityChange(e.target.value)}
+                    disabled={item?.stock === 0}
                   />
                 </div>
               </div>
@@ -231,7 +257,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                   handleIssueItem(item, selectedUser, selectedQuantity)
                 }
                 variant="success"
-                disabled={isButtonLoading}
+                disabled={isButtonLoading || item?.stock === 0}
               >
                 Issue Item
               </Button>

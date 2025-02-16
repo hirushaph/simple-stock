@@ -8,8 +8,6 @@ function SearchBar() {
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  useDebouncedCallback;
-
   const handleChange = useDebouncedCallback((term) => {
     const params = new URLSearchParams(searchParams);
 

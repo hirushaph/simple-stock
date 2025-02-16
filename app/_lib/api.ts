@@ -1,10 +1,10 @@
 import { StockItemType, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
 import { ITEMS_PER_PAGE } from "./const";
-import { databases } from "./appwrite";
+
 import { cookies } from "next/headers";
 import { createSessionClient } from "@/appwrite/config";
-import { Models, Query } from "node-appwrite";
+import { Query } from "node-appwrite";
 
 // export async function getAvailableStock(): Promise<StockItemType[]> {
 //   const result = await databases.listDocuments(
@@ -68,10 +68,15 @@ export async function getFilterdStock(
   return data;
 }
 
-export async function getTransactions(pageNo: number = 1): Promise<{
+export async function getTransactions(params: {
+  [key: string]: string;
+}): Promise<{
   documents: TransactionType[];
   total: number;
 }> {
+  const pageNo = Number(params?.page) || 1;
+  const sortDays = params?.sort || "all";
+
   const sessionCookie = (await cookies()).get("session");
 
   const sessionClient = await createSessionClient(sessionCookie?.value);
@@ -80,6 +85,64 @@ export async function getTransactions(pageNo: number = 1): Promise<{
 
   // calculate offset
   const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+
+  // setup filters
+  const options = [
+    Query.limit(ITEMS_PER_PAGE),
+    Query.offset(offset),
+    Query.orderDesc("$createdAt"),
+  ];
+
+  // sort "today"
+  if (sortDays === "today") {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = today.toISOString();
+
+    today.setHours(23, 59, 59, 999);
+    const endOfDay = today.toISOString();
+
+    options.push(Query.greaterThanEqual("$createdAt", startOfDay));
+    options.push(Query.lessThan("$createdAt", endOfDay));
+  }
+
+  // sort "7days"
+  if (sortDays === "7days") {
+    const now = new Date();
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999); // End of current day
+
+    // Get timestamp of 7 days ago
+    const startOfLast7Days = new Date(now);
+    startOfLast7Days.setDate(startOfLast7Days.getDate() - 7);
+    startOfLast7Days.setHours(0, 0, 0, 0); // Start of 7 days ago
+
+    const startOfLast7DaysISO = startOfLast7Days.toISOString();
+    const endOfTodayISO = endOfToday.toISOString();
+
+    options.push(Query.greaterThanEqual("$createdAt", startOfLast7DaysISO));
+    options.push(Query.lessThan("$createdAt", endOfTodayISO));
+  }
+  const {
+    documents,
+    total,
+  }: {
+    documents: TransactionType[];
+    total: number;
+  } = await sessionClient?.databases.listDocuments(
+    process.env.APPWRITE_DATABASE_ID,
+    process.env.APPWRITE_BORROWED_COLLECTION_ID,
+    options
+  );
+  return { documents, total };
+}
+
+export async function getIssuedItems() {
+  const sessionCookie = (await cookies()).get("session");
+
+  const sessionClient = await createSessionClient(sessionCookie?.value);
+
+  if (!sessionClient) throw new Error("Session not found");
 
   const {
     documents,
@@ -90,11 +153,8 @@ export async function getTransactions(pageNo: number = 1): Promise<{
   } = await sessionClient?.databases.listDocuments(
     process.env.APPWRITE_DATABASE_ID,
     process.env.APPWRITE_BORROWED_COLLECTION_ID,
-    [
-      Query.limit(ITEMS_PER_PAGE),
-      Query.offset(offset),
-      Query.orderDesc("$createdAt"),
-    ]
+    [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
   );
+
   return { documents, total };
 }
