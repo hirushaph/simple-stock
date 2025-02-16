@@ -22,7 +22,7 @@ export async function issueItem(
     process.env.APPWRITE_BORROWED_COLLECTION_ID!,
     ID.unique(),
     {
-      item: item.id,
+      item: item.$id,
       employer: user.$id,
       quantity,
       returned: false,
@@ -32,17 +32,14 @@ export async function issueItem(
   const updateStock = sessionClient?.databases.updateDocument(
     process.env.APPWRITE_DATABASE_ID!,
     process.env.APPWRITE_ITEMS_COLLECTION_ID!,
-    item.id,
+    item.$id,
     {
       stock: item.stock - quantity,
     }
   );
 
   // Execute requests
-  const [borrowed, updatedItem] = await Promise.all([
-    createBorrowedDocument,
-    updateStock,
-  ]);
+  await Promise.all([createBorrowedDocument, updateStock]);
 
   revalidatePath("/available");
 }
@@ -81,7 +78,7 @@ export async function updateItemStatus(transaction: TransactionType) {
 
       // If both updates are successful, revalidate the page
       revalidatePath("/history");
-    } catch (error) {
+    } catch (error: unknown) {
       // Rollback transaction if updates failed
       await sessionClient.databases.updateDocument(
         process.env.APPWRITE_DATABASE_ID,
@@ -93,7 +90,11 @@ export async function updateItemStatus(transaction: TransactionType) {
         }
       );
 
-      throw new Error("Transaction Update Failed");
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("An unknown error occurred");
+      }
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

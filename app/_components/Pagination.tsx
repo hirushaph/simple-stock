@@ -40,7 +40,7 @@ function Pagination({ total }: { total: number }) {
     } else {
       const half = Math.floor(MAX_VISIBLE_PAGES / 2);
       let start = Math.max(2, currentPageNo - half);
-      let end = Math.min(totalPages - 1, currentPageNo + half);
+      const end = Math.min(totalPages - 1, currentPageNo + half);
 
       if (start > 2) pages.push(1, "..."); // Show first page + ellipsis
       else start = 1;

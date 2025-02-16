@@ -19,10 +19,12 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   const [isClient, setIsClient] = useState(false);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<ItemUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<ItemUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ItemUser | undefined>(
+    undefined
+  );
   const [selectedQuantity, setSelectedQuantity] = useState<number | "">(1);
   const [isButtonLoading, setIsButtonLoading] = useState<boolean>(false);
 
@@ -86,7 +88,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     setIsModalOpen(false);
     setSearchTerm("");
     setSearchResults([]);
-    setSelectedUser(null);
+    setSelectedUser(undefined);
   }
 
   function handleUserSelect(user: ItemUser) {
@@ -108,11 +110,12 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
   }
 
   async function handleIssueItem(
-    item: StockItemType,
-    selectedUser: ItemUser,
-    selectedQuantity: number
+    item?: StockItemType,
+    selectedUser?: ItemUser,
+    selectedQuantity?: number | ""
   ) {
     try {
+      if (!item || !selectedUser || !selectedQuantity) return;
       setIsButtonLoading(true);
 
       await toast.promise(issueItem(item, selectedUser, selectedQuantity), {
@@ -123,9 +126,11 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
 
       setIsButtonLoading(false);
       onCloseModal();
-    } catch (error) {
+    } catch (error: unknown) {
       setIsButtonLoading(false);
-      toast.error(error.message);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
     }
   }
 
@@ -220,7 +225,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
                   </span>
                   <p className="text-[14px] uppercase text-gray-500">
                     ID:{" "}
-                    <span className="text-gray-700">{selectedUser?.id}</span>
+                    <span className="text-gray-700">{selectedUser?.eid}</span>
                   </p>
                   <p className="text-[14px] uppercase text-gray-500">
                     Name:{" "}

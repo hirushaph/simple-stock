@@ -1,4 +1,3 @@
-import { SessionCookie } from "@/types/types";
 import { getFilterdStock } from "../_lib/api";
 import ProductGrid from "./ProductGrid";
 

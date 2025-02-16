@@ -1,10 +1,10 @@
 import { StockItemType, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
 import { ITEMS_PER_PAGE } from "./const";
-import { databases } from "./appwrite";
+
 import { cookies } from "next/headers";
 import { createSessionClient } from "@/appwrite/config";
-import { Models, Query } from "node-appwrite";
+import { Query } from "node-appwrite";
 
 // export async function getAvailableStock(): Promise<StockItemType[]> {
 //   const result = await databases.listDocuments(
@@ -87,7 +87,7 @@ export async function getTransactions(params: {
   const offset = (pageNo - 1) * ITEMS_PER_PAGE;
 
   // setup filters
-  let options = [
+  const options = [
     Query.limit(ITEMS_PER_PAGE),
     Query.offset(offset),
     Query.orderDesc("$createdAt"),

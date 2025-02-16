@@ -1,3 +1,4 @@
+import { UserSession } from "@/types/types";
 import { Account, Client, Databases } from "node-appwrite";
 
 export type AdminClient = {
@@ -30,7 +31,7 @@ const createAdminClient = async (): Promise<AdminClient | null> => {
   };
 };
 
-const createSessionClient = async (session) => {
+const createSessionClient = async (session: string | undefined) => {
   if (!session) {
     throw new Error("No session");
   }

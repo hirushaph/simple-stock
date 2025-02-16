@@ -22,6 +22,7 @@ function IssueButton({ transaction }: { transaction: TransactionType }) {
     } catch (error) {
       setIsChecked((state) => !state);
       setIsLoading(false);
+      throw error;
     }
   }
 

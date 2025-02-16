@@ -51,7 +51,7 @@ async function page() {
         </div>
         <div>
           <p className="text-center text-sm text-gray-800 mt-4">
-            Don't have an account?{" "}
+            Don&apos;t have an account?
             <a href="/register" className="text-blue-500">
               Register
             </a>

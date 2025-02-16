@@ -8,7 +8,7 @@ type IssuedGridProps = {
   };
 };
 
-function IssuedGrid({ data: { documents, total } }: IssuedGridProps) {
+function IssuedGrid({ data: { documents } }: IssuedGridProps) {
   return (
     <>
       {documents.map((item) => (
