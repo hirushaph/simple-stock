@@ -17,3 +17,16 @@ export function formatTimestamp(isoTimestamp: string) {
 
   return `${formattedDate}, ${formattedTime}`;
 }
+
+export function getFormatedDate(dateString: Date) {
+  const date = new Date(dateString);
+
+  const fdate =
+    date.getFullYear() +
+    "." +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "." +
+    String(date.getDate()).padStart(2, "0");
+
+  return fdate;
+}
