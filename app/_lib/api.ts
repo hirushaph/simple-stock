@@ -76,6 +76,8 @@ export async function getTransactions(params: {
 }> {
   const pageNo = Number(params?.page) || 1;
   const sortDays = params?.sort || "all";
+  const fromDate = params?.from;
+  const toDate = params?.to;
 
   const sessionCookie = (await cookies()).get("session");
 
@@ -92,6 +94,17 @@ export async function getTransactions(params: {
     Query.offset(offset),
     Query.orderDesc("$createdAt"),
   ];
+
+  // sort date range
+  if (fromDate && toDate) {
+    const from = new Date(fromDate).toISOString();
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+    const toDateString = to.toISOString();
+    console.log(to);
+    options.push(Query.greaterThanEqual("$createdAt", from));
+    options.push(Query.lessThanEqual("$createdAt", toDateString));
+  }
 
   // sort "today"
   if (sortDays === "today") {
