@@ -21,7 +21,10 @@ export default async function Available({ searchParams }: AvailablePageProps) {
 
       {/* <Modal /> */}
 
-      <Suspense fallback={<Spinner className="mt-6" />} key={query}>
+      <Suspense
+        fallback={<Spinner className="mt-6 flex" size={26} />}
+        key={query}
+      >
         <ProductList query={query} />
       </Suspense>
     </div>

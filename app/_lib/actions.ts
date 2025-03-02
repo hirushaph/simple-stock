@@ -104,3 +104,14 @@ export async function updateItemStatus(transaction: TransactionType) {
     }
   }
 }
+
+// add new item
+
+export async function addNewItem(formData: FormData) {
+  const name = formData.get("name");
+  console.log(name);
+
+  // upload image to storage bucket
+
+  // add item to database
+}
