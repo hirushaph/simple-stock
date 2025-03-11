@@ -1,10 +1,16 @@
 "use server";
 
 import { createSessionClient } from "@/appwrite/config";
-import { ItemUser, StockItemType, TransactionType } from "@/types/types";
+import {
+  ItemUser,
+  StockItemType,
+  TransactionType,
+  UpdatedFields,
+} from "@/types/types";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { ID } from "node-appwrite";
+import { redirect } from "next/navigation";
+import { AppwriteException, ID } from "node-appwrite";
 
 export async function issueItem(
   item: StockItemType,
@@ -109,9 +115,108 @@ export async function updateItemStatus(transaction: TransactionType) {
 
 export async function addNewItem(formData: FormData) {
   const name = formData.get("name");
-  console.log(name);
+  const image = formData.get("image") as File;
+  const stock = formData.get("stock");
+  const sku = formData.get("sku");
 
-  // upload image to storage bucket
+  if (!name || !image || !stock || !sku) {
+    throw new Error("All fields required");
+  }
 
-  // add item to database
+  try {
+    const sessionCookie = (await cookies()).get("session");
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Authentication Failed");
+
+    // upload image to storage bucket
+    const result = await sessionClient?.storage.createFile(
+      process.env.APPWRITE_STORAGE_BUCKET,
+      ID.unique(),
+      image,
+      []
+    );
+
+    if (!result) throw new Error("Image upload failed");
+
+    const imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${process.env.APPWRITE_STORAGE_BUCKET}/files/${result.$id}/view?project=${process.env.APPWRITE_PROJECTID}`;
+
+    // add item to database
+    const rr = await sessionClient?.databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.APPWRITE_ITEMS_COLLECTION_ID!,
+      ID.unique(),
+      {
+        name,
+        stock: Number(stock),
+        sku,
+        image: imageUrl,
+      }
+    );
+    revalidatePath("/manage");
+    return { success: true, data: rr, message: "Item added" };
+  } catch (error: unknown) {
+    if (error instanceof AppwriteException) {
+      if (error.code === 409) {
+        return {
+          success: false,
+          message: "Sku already exits, please use different sku",
+        };
+      }
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
+}
+
+export async function deleteItem(id: string) {
+  if (!id) throw new Error("Document id not found");
+
+  try {
+    const sessionCookie = (await cookies()).get("session");
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Authentication Failed");
+
+    await sessionClient.databases.deleteDocument(
+      process.env.APPWRITE_DATABASE_ID, // databaseId
+      process.env.APPWRITE_ITEMS_COLLECTION_ID, // collectionId
+      id // documentId
+    );
+    revalidatePath("/manage");
+    return { success: true, message: "Item added" };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
+}
+
+export async function updateItem(
+  updatedFields: FormData,
+  id: string,
+  sku: string
+) {
+  if (!updatedFields) throw new Error("Form data not found");
+
+  //TODO
+  // Upload image to appwrite
+
+  const sessionCookie = (await cookies()).get("session");
+  const sessionClient = await createSessionClient(sessionCookie?.value);
+
+  if (!sessionClient) throw new Error("Authentication Failed");
+
+  const result = await sessionClient.databases.updateDocument(
+    process.env.APPWRITE_DATABASE_ID,
+    process.env.APPWRITE_ITEMS_COLLECTION_ID,
+    id,
+    { ...updatedFields }
+  );
+  console.log(result);
+  revalidatePath(`/manage/update/${sku}`);
+  return result;
 }

@@ -20,7 +20,7 @@ async function ManageTable() {
             <td className="px-4 py-3 border-r">{item.name}</td>
             <td className="px-4 py-3 border-r">{item.stock}</td>
             <td className="px-4 py-3 border-r">
-              <Actions />
+              <Actions item={item} />
             </td>
           </tr>
         ))}

@@ -1,4 +1,4 @@
-import { StockItemType, TransactionType } from "@/types/types";
+import { Item, StockItemType, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
 import { ITEMS_PER_PAGE } from "./const";
 
@@ -170,4 +170,34 @@ export async function getIssuedItems() {
   );
 
   return { documents, total };
+}
+
+export async function getItemBySku(sku: string) {
+  try {
+    const sessionCookie = (await cookies()).get("session");
+
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Session not found");
+
+    const {
+      documents,
+      total,
+    }: {
+      documents: Item[];
+      total: number;
+    } = await sessionClient?.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_ITEMS_COLLECTION_ID,
+      [Query.equal("sku", sku)]
+    );
+
+    return { success: true, document: documents[0], total };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
 }

@@ -1,15 +1,35 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import {
-  IoArrowBackCircleOutline,
-  IoCaretBackCircleOutline,
-} from "react-icons/io5";
+import { IoCaretBackCircleOutline } from "react-icons/io5";
 import { LuSave } from "react-icons/lu";
-import { addNewItem } from "../_lib/actions";
+import { addNewItem, updateItem } from "../_lib/actions";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { Item } from "@/types/types";
 
-function AddNewForm() {
+function AddNewForm({
+  data,
+  update = false,
+}: {
+  data?: Item;
+  update?: boolean;
+}) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: data?.name || "",
+    sku: data?.sku || "",
+    stock: data?.stock || 0,
+    image: null,
+    preview: data?.image || null,
+  });
+
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -20,8 +40,81 @@ function AddNewForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    await addNewItem(formData);
+    const formItems = new FormData(e.currentTarget);
+
+    const imageFile = formItems.get("image");
+
+    if (!data) return;
+
+    if (formItems.get("name") === data.name) {
+      formItems.delete("name");
+    }
+    if (formItems.get("sku") === data.sku) {
+      formItems.delete("sku");
+    }
+    if (Number(formItems.get("stock")) === data.stock) {
+      formItems.delete("stock");
+    }
+    if (imageFile instanceof File && imageFile.name == "") {
+      formItems.delete("image");
+    }
+
+    const isEmpty = formItems.entries().next().done;
+
+    if (isEmpty) {
+      return toast.error("Nothing changed");
+    }
+
+    const toastId = toast.loading(
+      `${update ? "Updating item" : "Adding item"}`
+    );
+    try {
+      if (update) {
+        // update item
+        if (!data) return;
+        await updateItem(formItems, data.$id, data.sku);
+        toast.update(toastId, {
+          render: "Item Updated",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        return;
+      }
+      const result = await addNewItem(formItems);
+      if (result.success) {
+        toast.update(toastId, {
+          render: "Item Added",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        router.push("/manage");
+      } else {
+        toast.update(toastId, {
+          render: result.message,
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.update(toastId, {
+          render: error.message,
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        toast.update(toastId, {
+          render: "Something went wrong",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
+    }
   }
 
   return (
@@ -38,6 +131,8 @@ function AddNewForm() {
               name="name"
               id="name"
               required
+              value={formData.name}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-md outline-none text-gray-500 focus:shadow-sm transition border border-gray-300"
             />
           </div>
@@ -51,6 +146,8 @@ function AddNewForm() {
               name="sku"
               id="sku"
               required
+              value={formData.sku}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-md outline-none text-gray-500 focus:shadow-sm transition border border-gray-300"
             />
           </div>
@@ -64,6 +161,8 @@ function AddNewForm() {
               name="stock"
               id="stock"
               required
+              value={formData.stock}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-md outline-none text-gray-500 focus:shadow-sm transition border border-gray-300"
             />
           </div>
@@ -77,7 +176,7 @@ function AddNewForm() {
               type="file"
               name="image"
               id="image"
-              required
+              required={!update}
               className="w-full px-4 py-2 rounded-xl outline-none text-gray-500 focus:shadow-sm transition"
               accept="image/*"
               onChange={handleImageChange}
@@ -101,7 +200,7 @@ function AddNewForm() {
             >
               <LuSave />
 
-              <span>Add Item</span>
+              <span>{update ? "Update Item" : "Add Item"}</span>
             </button>
           </div>
         </form>
@@ -118,7 +217,11 @@ function AddNewForm() {
               />
             ) : (
               <img
-                src="https://fakeimg.pl/150x150?text=Preview&font=bebas&font_size=30"
+                src={`${
+                  update
+                    ? data?.image
+                    : "https://fakeimg.pl/150x150?text=Preview&font=bebas&font_size=30"
+                }`}
                 alt="preview"
                 className="w-full h-full object-cover rounded-xl"
               />

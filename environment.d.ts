@@ -8,6 +8,7 @@ declare global {
       APPWRITE_USERS_COLLECIION_ID: string;
       APPWRITE_ENDPOINT: string;
       APPWRITE_BORROWED_COLLECTION_ID: string;
+      APPWRITE_STORAGE_BUCKET: string;
     }
   }
 }
