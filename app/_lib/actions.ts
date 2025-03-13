@@ -202,21 +202,53 @@ export async function updateItem(
 ) {
   if (!updatedFields) throw new Error("Form data not found");
 
-  //TODO
-  // Upload image to appwrite
+  const imageFile = updatedFields.get("image") as File;
 
   const sessionCookie = (await cookies()).get("session");
   const sessionClient = await createSessionClient(sessionCookie?.value);
 
   if (!sessionClient) throw new Error("Authentication Failed");
 
+  // Upload image to appwrite
+  let imageUrl = null;
+  let dataToUpdate: Record<string, string | number> = {};
+
+  if (imageFile) {
+    const imageResult = await sessionClient?.storage.createFile(
+      process.env.APPWRITE_STORAGE_BUCKET,
+      ID.unique(),
+      imageFile,
+      []
+    );
+
+    if (!imageResult) throw new Error("Image upload failed");
+
+    imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${process.env.APPWRITE_STORAGE_BUCKET}/files/${imageResult.$id}/view?project=${process.env.APPWRITE_PROJECTID}`;
+
+    updatedFields.delete("image");
+    dataToUpdate = { image: imageUrl };
+  }
+
+  const formDataObj = Object.fromEntries(updatedFields) as Record<
+    string,
+    string | number
+  >;
+
+  if (formDataObj.stock !== undefined) {
+    const stockValue = Number(formDataObj.stock);
+    if (!isNaN(stockValue)) {
+      formDataObj.stock = stockValue;
+    }
+  }
+
+  dataToUpdate = { ...dataToUpdate, ...formDataObj };
+
   const result = await sessionClient.databases.updateDocument(
     process.env.APPWRITE_DATABASE_ID,
     process.env.APPWRITE_ITEMS_COLLECTION_ID,
     id,
-    { ...updatedFields }
+    { ...dataToUpdate }
   );
-  console.log(result);
   revalidatePath(`/manage/update/${sku}`);
   return result;
 }
