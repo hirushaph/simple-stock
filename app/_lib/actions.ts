@@ -1,15 +1,9 @@
 "use server";
 
 import { createSessionClient } from "@/appwrite/config";
-import {
-  ItemUser,
-  StockItemType,
-  TransactionType,
-  UpdatedFields,
-} from "@/types/types";
+import { ItemUser, StockItemType, TransactionType } from "@/types/types";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { AppwriteException, ID } from "node-appwrite";
 
 export async function issueItem(
@@ -153,7 +147,7 @@ export async function addNewItem(formData: FormData) {
         image: imageUrl,
       }
     );
-    revalidatePath("/manage");
+    revalidatePath("/products");
     return { success: true, data: rr, message: "Item added" };
   } catch (error: unknown) {
     if (error instanceof AppwriteException) {
@@ -170,8 +164,14 @@ export async function addNewItem(formData: FormData) {
   }
 }
 
-export async function deleteItem(id: string) {
+export async function deleteItem(id: string, type: string) {
   if (!id) throw new Error("Document id not found");
+  console.log(type);
+
+  const colId =
+    type === "products"
+      ? process.env.APPWRITE_ITEMS_COLLECTION_ID
+      : process.env.APPWRITE_USERS_COLLECIION_ID;
 
   try {
     const sessionCookie = (await cookies()).get("session");
@@ -181,10 +181,10 @@ export async function deleteItem(id: string) {
 
     await sessionClient.databases.deleteDocument(
       process.env.APPWRITE_DATABASE_ID, // databaseId
-      process.env.APPWRITE_ITEMS_COLLECTION_ID, // collectionId
+      colId, // collectionId
       id // documentId
     );
-    revalidatePath("/manage");
+    revalidatePath("/products");
     return { success: true, message: "Item added" };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -249,6 +249,7 @@ export async function updateItem(
     id,
     { ...dataToUpdate }
   );
-  revalidatePath(`/manage/update/${sku}`);
+  revalidatePath(`/products/update/${sku}`);
+  revalidatePath(`/products`);
   return result;
 }

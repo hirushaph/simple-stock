@@ -184,7 +184,7 @@ function AddNewForm({
           </div>
 
           <div className="mt-6 flex justify-between">
-            <Link href="/manage">
+            <Link href="/products">
               <button
                 type="button"
                 className="bg-blue-200 border border-blue-300 py-2 gap-1 justify-center items-center rounded-md px-4 flex"
