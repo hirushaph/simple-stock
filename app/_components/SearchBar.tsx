@@ -1,9 +1,8 @@
 "use client";
-
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
-function SearchBar() {
+function SearchBar({ className }: { className?: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -21,7 +20,7 @@ function SearchBar() {
   }, 300);
 
   return (
-    <div>
+    <div className={className}>
       <input
         type="search"
         name="search"
@@ -29,7 +28,7 @@ function SearchBar() {
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Search items"
         defaultValue={searchParams.get("search")?.toString()}
-        className="w-full px-5 py-2 rounded-xl mt-3 outline-none text-gray-500 focus:shadow-sm transition"
+        className={`w-full px-5 py-2 rounded-xl outline-none text-gray-500 focus:shadow-sm transition `}
       />
     </div>
   );

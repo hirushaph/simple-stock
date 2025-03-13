@@ -6,6 +6,9 @@ import Pagination from "./Pagination";
 
 async function HistoryTable({ params }: { params: { [key: string]: string } }) {
   const { documents, total } = await getTransactions(params);
+
+  const isEmpty = !documents || documents.length === 0;
+
   return (
     <>
       <div className="mb-3 mt-2">
@@ -22,25 +25,35 @@ async function HistoryTable({ params }: { params: { [key: string]: string } }) {
             </tr>
           </thead>
           <tbody>
-            {documents.map((transaction) => (
-              <tr className="even:bg-gray-100 text-sm" key={transaction.$id}>
-                <td className="px-4 py-3 border-r">{transaction.item.sku}</td>
-                <td className="px-4 py-3 border-r">{transaction.item.name}</td>
-                <td className="px-4 py-3 border-r">
-                  {transaction.employer.name}
-                </td>
-                <td className="px-4 py-3 border-r">{transaction.quantity}</td>
-                <td className="px-4 py-3 border-r">
-                  {formatTimestamp(transaction.$createdAt)}
-                </td>
-                <td className="px-4 py-3 border-r">
-                  {formatTimestamp(transaction.returnedDate)}
-                </td>
-                <td className="px-4">
-                  <IssueButton transaction={transaction} />
+            {isEmpty ? (
+              <tr>
+                <td colSpan={7} className="text-center py-4">
+                  No data found
                 </td>
               </tr>
-            ))}
+            ) : (
+              documents.map((transaction) => (
+                <tr className="even:bg-gray-100 text-sm" key={transaction.$id}>
+                  <td className="px-4 py-3 border-r">{transaction.item.sku}</td>
+                  <td className="px-4 py-3 border-r">
+                    {transaction.item.name}
+                  </td>
+                  <td className="px-4 py-3 border-r">
+                    {transaction.employer.name}
+                  </td>
+                  <td className="px-4 py-3 border-r">{transaction.quantity}</td>
+                  <td className="px-4 py-3 border-r">
+                    {formatTimestamp(transaction.$createdAt)}
+                  </td>
+                  <td className="px-4 py-3 border-r">
+                    {formatTimestamp(transaction.returnedDate)}
+                  </td>
+                  <td className="px-4">
+                    <IssueButton transaction={transaction} />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

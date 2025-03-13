@@ -1,40 +1,37 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const menu = [
+  { name: "Available", link: "/available" },
+  { name: "Borrowed", link: "/borrowed" },
+  { name: "History", link: "/history" },
   {
-    name: "Dashboard",
-    icon: "/dashboard.png",
-    link: "/dashboard",
+    name: "Products",
+    link: "/products",
   },
-
   {
-    name: "Available",
-    icon: "/available.png",
-    link: "/available",
-  },
-
-  {
-    name: "Borrowed",
-    icon: "/borrowed.png",
-    link: "/borrowed",
-  },
-
-  {
-    name: "History",
-    icon: "/history.png",
-    link: "/history",
+    name: "Users",
+    link: "/users",
   },
 ];
 
 function Sidebar() {
+  const pathname = usePathname();
+
   return (
-    <aside className="bg-white pt-4">
+    <aside className="bg-white pt-4 w-60">
       <ul>
         {menu.map((item) => (
-          <li key={item.name}>
+          <li key={item.name} className="relative">
             <Link
               href={item.link}
-              className="flex gap-3 py-3 px-4 duration-400 hover:bg-accentLight items-center transition-colors "
+              className={`flex gap-3 py-3 px-4 items-center transition-colors ${
+                pathname === item.link
+                  ? "bg-accentLight"
+                  : "hover:bg-accentLight"
+              }`}
             >
               <span className="text-[18px] font-normal">{item.name}</span>
             </Link>

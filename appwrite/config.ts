@@ -1,5 +1,5 @@
 import { UserSession } from "@/types/types";
-import { Account, Client, Databases } from "node-appwrite";
+import { Account, Client, Databases, Storage } from "node-appwrite";
 
 export type AdminClient = {
   account: Account;
@@ -55,6 +55,9 @@ const createSessionClient = async (session: string | undefined) => {
     },
     get databases(): Databases {
       return new Databases(client);
+    },
+    get storage(): Storage {
+      return new Storage(client);
     },
   };
 };

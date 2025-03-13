@@ -12,7 +12,7 @@ const fetchInstance = async ({ url, method }: FetchInstance) => {
       Cookie: `session=${sessionCookie?.value}`,
     },
   };
-  return fetch(url, { method, ...headers });
+  return fetch(url, { method, ...headers, next: { revalidate: 60 } });
 };
 
 export default fetchInstance;

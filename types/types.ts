@@ -45,6 +45,13 @@ export type Employer = Models.Document & {
   eid: string;
 };
 
+export type UpdatedFields = {
+  name?: string;
+  sku?: string;
+  stock?: number;
+  image?: File;
+};
+
 export type UserSession = {
   $id: string;
   $createdAt: string;

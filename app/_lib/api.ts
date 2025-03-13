@@ -1,4 +1,4 @@
-import { StockItemType, TransactionType } from "@/types/types";
+import { Employer, Item, TransactionType } from "@/types/types";
 import fetchInstance from "./fetchInstance";
 import { ITEMS_PER_PAGE } from "./const";
 
@@ -48,14 +48,7 @@ import { Query } from "node-appwrite";
 //   return filteredData;
 // }
 
-type ProductApiResults = {
-  documents: StockItemType[];
-  total: number;
-};
-
-export async function getFilterdStock(
-  query?: string | string[]
-): Promise<ProductApiResults> {
+export async function getFilterdStock(query?: string | string[]) {
   const baseurl = "http://localhost:3000";
   const endpoint = query
     ? `${baseurl}/api/products?search=${query}`
@@ -65,7 +58,7 @@ export async function getFilterdStock(
 
   const data = await res.json();
 
-  return data;
+  return { success: true, documents: data.documents, total: data.total };
 }
 
 export async function getTransactions(params: {
@@ -76,6 +69,8 @@ export async function getTransactions(params: {
 }> {
   const pageNo = Number(params?.page) || 1;
   const sortDays = params?.sort || "all";
+  const fromDate = params?.from;
+  const toDate = params?.to;
 
   const sessionCookie = (await cookies()).get("session");
 
@@ -92,6 +87,17 @@ export async function getTransactions(params: {
     Query.offset(offset),
     Query.orderDesc("$createdAt"),
   ];
+
+  // sort date range
+  if (fromDate && toDate) {
+    const from = new Date(fromDate).toISOString();
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+    const toDateString = to.toISOString();
+    console.log(to);
+    options.push(Query.greaterThanEqual("$createdAt", from));
+    options.push(Query.lessThanEqual("$createdAt", toDateString));
+  }
 
   // sort "today"
   if (sortDays === "today") {
@@ -157,4 +163,66 @@ export async function getIssuedItems() {
   );
 
   return { documents, total };
+}
+
+export async function getItemBySku(sku: string) {
+  try {
+    const sessionCookie = (await cookies()).get("session");
+
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Session not found");
+
+    const {
+      documents,
+      total,
+    }: {
+      documents: Item[];
+      total: number;
+    } = await sessionClient?.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_ITEMS_COLLECTION_ID,
+      [Query.equal("sku", sku)]
+    );
+
+    return { success: true, document: documents[0], total };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
+}
+
+export async function getFilterdUsers(query?: string) {
+  try {
+    const sessionCookie = (await cookies()).get("session");
+
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Session not found");
+
+    const config = query ? [Query.contains("name", query)] : [];
+
+    const {
+      documents,
+      total,
+    }: {
+      documents: Employer[];
+      total: number;
+    } = await sessionClient?.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_USERS_COLLECIION_ID,
+      config
+    );
+
+    return { success: true, documents: documents, total };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
 }
