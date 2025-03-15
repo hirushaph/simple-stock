@@ -253,3 +253,46 @@ export async function updateItem(
   revalidatePath(`/products`);
   return result;
 }
+
+export async function addUser(formData: FormData) {
+  const name = formData.get("name");
+  const eid = formData.get("uid");
+  console.log(eid);
+
+  if (!name || !eid) {
+    throw new Error("All fields required");
+  }
+
+  try {
+    const sessionCookie = (await cookies()).get("session");
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Authentication Failed");
+
+    // add item to database
+    const rr = await sessionClient?.databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.APPWRITE_USERS_COLLECIION_ID!,
+      ID.unique(),
+      {
+        eid,
+        name,
+      }
+    );
+    revalidatePath("/users");
+    return { success: true, data: rr, message: "Item added" };
+  } catch (error: unknown) {
+    console.log(error);
+    if (error instanceof AppwriteException) {
+      if (error.code === 409) {
+        return {
+          success: false,
+          message: "User id already exits, please use different id",
+        };
+      }
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
+}
