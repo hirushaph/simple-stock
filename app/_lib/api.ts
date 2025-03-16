@@ -48,11 +48,21 @@ import { Query } from "node-appwrite";
 //   return filteredData;
 // }
 
-export async function getFilterdStock(query?: string | string[]) {
+export async function getFilterdStock(
+  pageNo: number,
+  query?: string | string[]
+) {
   const baseurl = "http://localhost:3000";
-  const endpoint = query
-    ? `${baseurl}/api/products?search=${query}`
-    : `${baseurl}/api/products`;
+  const params = new URLSearchParams();
+
+  const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
+
+  if (query) params.append("search", normalizedQuery);
+  params.append("page", pageNo.toString());
+
+  const endpoint = `${baseurl}/api/products${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
 
   const res = await fetchInstance({ url: endpoint, method: "GET" });
 
@@ -195,15 +205,28 @@ export async function getItemBySku(sku: string) {
   }
 }
 
-export async function getFilterdUsers(query?: string) {
+export async function getFilterdUsers(
+  pageNo: number,
+  query?: string | string[]
+) {
   try {
+    console.log(pageNo);
     const sessionCookie = (await cookies()).get("session");
 
     const sessionClient = await createSessionClient(sessionCookie?.value);
 
     if (!sessionClient) throw new Error("Session not found");
 
-    const config = query ? [Query.contains("name", query)] : [];
+    const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
+
+    const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+    const config = [Query.limit(ITEMS_PER_PAGE), Query.offset(offset)];
+
+    console.log(pageNo);
+
+    if (normalizedQuery) {
+      config.push(Query.contains("name", normalizedQuery));
+    }
 
     const {
       documents,
