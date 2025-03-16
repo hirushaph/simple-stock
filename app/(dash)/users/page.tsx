@@ -16,7 +16,7 @@ async function page({ searchParams }: UsersPageProps) {
     : params.search || "";
   return (
     <div className="px-4">
-      <h1 className="text-xl font-medium">Manage Users</h1>
+      <h1 className="text-xl font-medium mb-2">Manage Users</h1>
 
       {/* Search bar and add new button */}
       <div className="flex justify-between items-center gap-4 mt-3">

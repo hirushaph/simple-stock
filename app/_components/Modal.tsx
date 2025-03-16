@@ -129,7 +129,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     } catch (error: unknown) {
       setIsButtonLoading(false);
       if (error instanceof Error) {
-        toast.error(error.message);
+        toast.error("Something went wrong");
       }
     }
   }

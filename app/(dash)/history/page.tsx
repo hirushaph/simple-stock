@@ -12,7 +12,7 @@ async function page({
   // const pageNumber = Number(params?.page) || 1;
   return (
     <div className="px-4">
-      <h1 className="text-xl font-medium">History</h1>
+      <h1 className="text-xl font-medium mb-2">History</h1>
       {/* filters */}
       <HistoryFilters />
 

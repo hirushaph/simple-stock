@@ -16,9 +16,13 @@ export async function GET(request: Request) {
     const searchQuery = searchParams.get("search");
     const pageNo = Number(searchParams.get("page")) || 1;
 
-    const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+    const config: string[] = [];
 
-    const config = [Query.limit(ITEMS_PER_PAGE), Query.offset(offset)];
+    if (pageNo) {
+      const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+      config.push(Query.limit(ITEMS_PER_PAGE));
+      config.push(Query.offset(offset));
+    }
     if (searchQuery) {
       config.push(Query.contains("name", searchQuery));
     }

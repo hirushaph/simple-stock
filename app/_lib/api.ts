@@ -49,7 +49,7 @@ import { Query } from "node-appwrite";
 // }
 
 export async function getFilterdStock(
-  pageNo: number,
+  pageNo?: number,
   query?: string | string[]
 ) {
   const baseurl = "http://localhost:3000";
@@ -58,13 +58,15 @@ export async function getFilterdStock(
   const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
 
   if (query) params.append("search", normalizedQuery);
-  params.append("page", pageNo.toString());
+  if (pageNo) params.append("page", pageNo.toString());
 
   const endpoint = `${baseurl}/api/products${
     params.toString() ? `?${params.toString()}` : ""
   }`;
 
   const res = await fetchInstance({ url: endpoint, method: "GET" });
+
+  if (!res.ok) return { success: false, message: "Something went wrong" };
 
   const data = await res.json();
 
@@ -154,25 +156,33 @@ export async function getTransactions(params: {
 }
 
 export async function getIssuedItems() {
-  const sessionCookie = (await cookies()).get("session");
+  try {
+    const sessionCookie = (await cookies()).get("session");
 
-  const sessionClient = await createSessionClient(sessionCookie?.value);
+    const sessionClient = await createSessionClient(sessionCookie?.value);
 
-  if (!sessionClient) throw new Error("Session not found");
+    if (!sessionClient) throw new Error("Session not found");
 
-  const {
-    documents,
-    total,
-  }: {
-    documents: TransactionType[];
-    total: number;
-  } = await sessionClient?.databases.listDocuments(
-    process.env.APPWRITE_DATABASE_ID,
-    process.env.APPWRITE_BORROWED_COLLECTION_ID,
-    [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
-  );
+    const {
+      documents,
+      total,
+    }: {
+      documents: TransactionType[];
+      total: number;
+    } = await sessionClient?.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_BORROWED_COLLECTION_ID,
+      [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
+    );
 
-  return { documents, total };
+    return { success: true, documents, total };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
 }
 
 export async function getItemBySku(sku: string) {
@@ -219,11 +229,13 @@ export async function getFilterdUsers(
 
     const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
 
-    const offset = (pageNo - 1) * ITEMS_PER_PAGE;
-    const config = [Query.limit(ITEMS_PER_PAGE), Query.offset(offset)];
+    const config: string[] = [];
 
-    console.log(pageNo);
-
+    if (pageNo) {
+      const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+      config.push(Query.limit(ITEMS_PER_PAGE));
+      config.push(Query.offset(offset));
+    }
     if (normalizedQuery) {
       config.push(Query.contains("name", normalizedQuery));
     }

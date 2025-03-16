@@ -15,7 +15,7 @@ export default async function Available({ searchParams }: AvailablePageProps) {
 
   return (
     <div className="px-4">
-      <h1 className="text-xl font-medium">Available Items</h1>
+      <h1 className="text-xl font-medium mb-2">Available Items</h1>
 
       <SearchBar />
 

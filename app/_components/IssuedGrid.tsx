@@ -2,16 +2,14 @@ import { TransactionType } from "@/types/types";
 import Product from "./Product";
 
 type IssuedGridProps = {
-  data: {
-    documents: TransactionType[];
-    total: number;
-  };
+  data: TransactionType[];
+  total?: number;
 };
 
-function IssuedGrid({ data: { documents } }: IssuedGridProps) {
+function IssuedGrid({ data }: IssuedGridProps) {
   return (
     <>
-      {documents.map((item) => (
+      {data.map((item) => (
         <Product
           key={item.$id}
           item={item.item}

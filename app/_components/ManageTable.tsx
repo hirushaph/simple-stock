@@ -17,8 +17,6 @@ async function ManageTable({
     total: 0,
   };
 
-  console.log(params);
-
   const pageNo = Number(params?.page) || 1;
 
   if (type === "users") {
