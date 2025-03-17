@@ -48,13 +48,25 @@ import { Query } from "node-appwrite";
 //   return filteredData;
 // }
 
-export async function getFilterdStock(query?: string | string[]) {
+export async function getFilterdStock(
+  pageNo?: number,
+  query?: string | string[]
+) {
   const baseurl = "http://localhost:3000";
-  const endpoint = query
-    ? `${baseurl}/api/products?search=${query}`
-    : `${baseurl}/api/products`;
+  const params = new URLSearchParams();
+
+  const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
+
+  if (query) params.append("search", normalizedQuery);
+  if (pageNo) params.append("page", pageNo.toString());
+
+  const endpoint = `${baseurl}/api/products${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
 
   const res = await fetchInstance({ url: endpoint, method: "GET" });
+
+  if (!res.ok) return { success: false, message: "Something went wrong" };
 
   const data = await res.json();
 
@@ -144,25 +156,33 @@ export async function getTransactions(params: {
 }
 
 export async function getIssuedItems() {
-  const sessionCookie = (await cookies()).get("session");
+  try {
+    const sessionCookie = (await cookies()).get("session");
 
-  const sessionClient = await createSessionClient(sessionCookie?.value);
+    const sessionClient = await createSessionClient(sessionCookie?.value);
 
-  if (!sessionClient) throw new Error("Session not found");
+    if (!sessionClient) throw new Error("Session not found");
 
-  const {
-    documents,
-    total,
-  }: {
-    documents: TransactionType[];
-    total: number;
-  } = await sessionClient?.databases.listDocuments(
-    process.env.APPWRITE_DATABASE_ID,
-    process.env.APPWRITE_BORROWED_COLLECTION_ID,
-    [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
-  );
+    const {
+      documents,
+      total,
+    }: {
+      documents: TransactionType[];
+      total: number;
+    } = await sessionClient?.databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.APPWRITE_BORROWED_COLLECTION_ID,
+      [Query.orderDesc("$createdAt"), Query.equal("returned", false)]
+    );
 
-  return { documents, total };
+    return { success: true, documents, total };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
 }
 
 export async function getItemBySku(sku: string) {
@@ -195,15 +215,30 @@ export async function getItemBySku(sku: string) {
   }
 }
 
-export async function getFilterdUsers(query?: string) {
+export async function getFilterdUsers(
+  pageNo: number,
+  query?: string | string[]
+) {
   try {
+    console.log(pageNo);
     const sessionCookie = (await cookies()).get("session");
 
     const sessionClient = await createSessionClient(sessionCookie?.value);
 
     if (!sessionClient) throw new Error("Session not found");
 
-    const config = query ? [Query.contains("name", query)] : [];
+    const normalizedQuery = Array.isArray(query) ? query[0] : query || "";
+
+    const config: string[] = [];
+
+    if (pageNo) {
+      const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+      config.push(Query.limit(ITEMS_PER_PAGE));
+      config.push(Query.offset(offset));
+    }
+    if (normalizedQuery) {
+      config.push(Query.contains("name", normalizedQuery));
+    }
 
     const {
       documents,

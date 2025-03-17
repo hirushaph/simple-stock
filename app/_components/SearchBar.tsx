@@ -12,6 +12,10 @@ function SearchBar({ className }: { className?: string }) {
 
     if (term) {
       params.set("search", term);
+      // Remove pagination param if exists
+      if (params.has("page")) {
+        params.delete("page");
+      }
     } else {
       params.delete("search");
     }

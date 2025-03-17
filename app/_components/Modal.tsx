@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Spinner from "./Spinner";
 import { issueItem } from "../_lib/actions";
 import { toast } from "react-toastify";
+import Image from "next/image";
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -129,7 +130,7 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
     } catch (error: unknown) {
       setIsButtonLoading(false);
       if (error instanceof Error) {
-        toast.error(error.message);
+        toast.error("Something went wrong");
       }
     }
   }
@@ -161,11 +162,22 @@ function Modal({ item, isModalOpen, setIsModalOpen }: ModalProps) {
             </div>
             <div className="mt-4 body grid grid-cols-[1fr_2fr] py-4 gap-3">
               <div className="border rounded-md p-2">
-                <img
-                  src={item?.image}
-                  className="rounded-md"
-                  alt="product image"
-                />
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    aspectRatio: "4/3",
+                  }}
+                >
+                  <Image
+                    src={item?.image || "https://via.placeholder.com/150"}
+                    className="rounded-md"
+                    alt="product image"
+                    fill
+                    objectFit="cover"
+                  />
+                </div>
+
                 <h2 className="text-sm font-semibold mt-2 text-gray-700 text-center">
                   {item?.name}
                 </h2>

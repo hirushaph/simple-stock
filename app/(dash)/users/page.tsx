@@ -16,7 +16,7 @@ async function page({ searchParams }: UsersPageProps) {
     : params.search || "";
   return (
     <div className="px-4">
-      <h1 className="text-xl font-medium">Manage Users</h1>
+      <h1 className="text-xl font-medium mb-2">Manage Users</h1>
 
       {/* Search bar and add new button */}
       <div className="flex justify-between items-center gap-4 mt-3">
@@ -33,8 +33,11 @@ async function page({ searchParams }: UsersPageProps) {
       </div>
 
       {/* Table */}
-      <Suspense fallback={<Spinner size={28} />} key={query}>
-        <ManageTable type="users" query={query} />
+      <Suspense
+        fallback={<Spinner className="mt-8 flex" size={28} />}
+        key={query}
+      >
+        <ManageTable type="users" query={query} params={params} />
       </Suspense>
     </div>
   );

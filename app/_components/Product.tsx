@@ -1,6 +1,7 @@
 "use client";
 
 import { StockItemType } from "@/types/types";
+import Image from "next/image";
 
 function Product({
   item,
@@ -22,11 +23,12 @@ function Product({
       {...(onModalOpen && { onClick: () => onModalOpen(item) })}
     >
       <div className="rounded-md overflow-hidden relative aspect-[4/3] ">
-        <img
+        <Image
           src={item.image}
           alt="product image"
           style={{ objectFit: "cover" }}
-          className="aspect-[4/3]"
+          fill
+          // className="aspect-[4/3]"
         />
       </div>
       <div className="mt-2 flex justify-between items-center">

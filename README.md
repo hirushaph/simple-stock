@@ -1,6 +1,10 @@
 # 📦 Simple Stock Management System
 
-Under Development
+### Features
 
-TODO
-Add icons to sidebar menu
+Add Items
+Issue Items
+Update Items
+Add Users
+History Log
+History Filters

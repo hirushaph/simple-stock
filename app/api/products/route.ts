@@ -1,3 +1,4 @@
+import { ITEMS_PER_PAGE } from "@/app/_lib/const";
 import { createSessionClient } from "@/appwrite/config";
 import { StockItemType } from "@/types/types";
 import { cookies } from "next/headers";
@@ -8,14 +9,23 @@ export async function GET(request: Request) {
 
   try {
     const adminClient = await createSessionClient(sessionCookie?.value);
-    const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get("search");
-
     if (adminClient === null) {
       return Response.json("Configuration Error", { status: 500 });
     }
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get("search");
+    const pageNo = Number(searchParams.get("page"));
 
-    const config = searchQuery ? [Query.contains("name", searchQuery)] : [];
+    const config: string[] = [];
+
+    if (pageNo) {
+      const offset = (pageNo - 1) * ITEMS_PER_PAGE;
+      config.push(Query.limit(ITEMS_PER_PAGE));
+      config.push(Query.offset(offset));
+    }
+    if (searchQuery) {
+      config.push(Query.contains("name", searchQuery));
+    }
 
     const { documents, total } = await adminClient.databases.listDocuments(
       process.env.APPWRITE_DATABASE_ID,

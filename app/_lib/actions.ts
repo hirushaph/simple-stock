@@ -1,6 +1,7 @@
 "use server";
 
 import { createSessionClient } from "@/appwrite/config";
+import auth from "@/auth";
 import { ItemUser, StockItemType, TransactionType } from "@/types/types";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -11,8 +12,6 @@ export async function issueItem(
   user: ItemUser,
   quantity: number
 ) {
-  console.log("server action run");
-
   const sessionCookie = (await cookies()).get("session");
   const sessionClient = await createSessionClient(sessionCookie?.value);
 
@@ -148,6 +147,7 @@ export async function addNewItem(formData: FormData) {
       }
     );
     revalidatePath("/products");
+    revalidatePath("/available");
     return { success: true, data: rr, message: "Item added" };
   } catch (error: unknown) {
     if (error instanceof AppwriteException) {
@@ -166,7 +166,6 @@ export async function addNewItem(formData: FormData) {
 
 export async function deleteItem(id: string, type: string) {
   if (!id) throw new Error("Document id not found");
-  console.log(type);
 
   const colId =
     type === "products"
@@ -251,5 +250,51 @@ export async function updateItem(
   );
   revalidatePath(`/products/update/${sku}`);
   revalidatePath(`/products`);
+  revalidatePath("/available");
   return result;
+}
+
+export async function addUser(formData: FormData) {
+  const name = formData.get("name");
+  const eid = formData.get("uid");
+
+  if (!name || !eid) {
+    throw new Error("All fields required");
+  }
+
+  try {
+    const sessionCookie = (await cookies()).get("session");
+    const sessionClient = await createSessionClient(sessionCookie?.value);
+
+    if (!sessionClient) throw new Error("Authentication Failed");
+
+    // add item to database
+    const rr = await sessionClient?.databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.APPWRITE_USERS_COLLECIION_ID!,
+      ID.unique(),
+      {
+        eid,
+        name,
+      }
+    );
+    revalidatePath("/users");
+    return { success: true, data: rr, message: "Item added" };
+  } catch (error: unknown) {
+    if (error instanceof AppwriteException) {
+      if (error.code === 409) {
+        return {
+          success: false,
+          message: "User id already exits, please use different id",
+        };
+      }
+      return { success: false, message: error.message };
+    } else {
+      return { success: false, message: "Something went wrong" };
+    }
+  }
+}
+
+export async function logoutUser() {
+  await auth.deteleSession();
 }

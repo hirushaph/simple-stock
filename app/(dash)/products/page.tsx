@@ -16,11 +16,11 @@ async function page({ searchParams }: ProdutsPageProps) {
     : params.search || "";
   return (
     <div className="px-4">
-      <h1 className="text-xl font-medium">Manage Products</h1>
+      <h1 className="text-xl font-medium mb-2">Manage Products</h1>
 
       {/* Search bar and add new button */}
       <div className="flex justify-between items-center gap-4 mt-3">
-        <Suspense fallback={<Spinner size={28} />}>
+        <Suspense fallback={<Spinner size={30} />}>
           <SearchBar className="flex-1" />
         </Suspense>
         <Link href="/products/addnew">
@@ -32,8 +32,11 @@ async function page({ searchParams }: ProdutsPageProps) {
       </div>
 
       {/* Table */}
-      <Suspense fallback={<Spinner size={28} />} key={query}>
-        <ManageTable type="products" query={query} />
+      <Suspense
+        fallback={<Spinner className="mt-8 flex" size={30} />}
+        key={query}
+      >
+        <ManageTable type="products" query={query} params={params} />
       </Suspense>
     </div>
   );
