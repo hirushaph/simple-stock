@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
         pathname: "**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "cloud.appwrite.io",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "fakeimg.pl",
+        pathname: "/**",
+      },
     ],
   },
 };

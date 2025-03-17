@@ -20,7 +20,7 @@ async function page({ searchParams }: ProdutsPageProps) {
 
       {/* Search bar and add new button */}
       <div className="flex justify-between items-center gap-4 mt-3">
-        <Suspense fallback={<Spinner size={28} />}>
+        <Suspense fallback={<Spinner size={30} />}>
           <SearchBar className="flex-1" />
         </Suspense>
         <Link href="/products/addnew">
@@ -32,7 +32,10 @@ async function page({ searchParams }: ProdutsPageProps) {
       </div>
 
       {/* Table */}
-      <Suspense fallback={<Spinner size={28} />} key={query}>
+      <Suspense
+        fallback={<Spinner className="mt-8 flex" size={30} />}
+        key={query}
+      >
         <ManageTable type="products" query={query} params={params} />
       </Suspense>
     </div>

@@ -10,8 +10,6 @@ function HistoryFilters() {
 
   const selectedFilter = searchParams.get("sort");
 
-  console.log(selectedFilter);
-
   function handleSortingChange(sorting: string) {
     const params = new URLSearchParams(searchParams);
 

@@ -33,7 +33,10 @@ async function page({ searchParams }: UsersPageProps) {
       </div>
 
       {/* Table */}
-      <Suspense fallback={<Spinner size={28} />} key={query}>
+      <Suspense
+        fallback={<Spinner className="mt-8 flex" size={28} />}
+        key={query}
+      >
         <ManageTable type="users" query={query} params={params} />
       </Suspense>
     </div>

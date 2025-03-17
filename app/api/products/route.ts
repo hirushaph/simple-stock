@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     }
     const { searchParams } = new URL(request.url);
     const searchQuery = searchParams.get("search");
-    const pageNo = Number(searchParams.get("page")) || 1;
+    const pageNo = Number(searchParams.get("page"));
 
     const config: string[] = [];
 

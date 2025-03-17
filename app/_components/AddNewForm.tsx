@@ -7,6 +7,7 @@ import { addNewItem, updateItem } from "../_lib/actions";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { Item } from "@/types/types";
+import Image from "next/image";
 
 function AddNewForm({
   data,
@@ -16,6 +17,7 @@ function AddNewForm({
   update?: boolean;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: data?.name || "",
     sku: data?.sku || "",
@@ -40,30 +42,8 @@ function AddNewForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setLoading(true);
     const formItems = new FormData(e.currentTarget);
-
-    const imageFile = formItems.get("image");
-
-    if (!data) return;
-
-    if (formItems.get("name") === data.name) {
-      formItems.delete("name");
-    }
-    if (formItems.get("sku") === data.sku) {
-      formItems.delete("sku");
-    }
-    if (Number(formItems.get("stock")) === data.stock) {
-      formItems.delete("stock");
-    }
-    if (imageFile instanceof File && imageFile.name == "") {
-      formItems.delete("image");
-    }
-
-    const isEmpty = formItems.entries().next().done;
-
-    if (isEmpty) {
-      return toast.error("Nothing changed");
-    }
 
     const toastId = toast.loading(
       `${update ? "Updating item" : "Adding item"}`
@@ -72,6 +52,28 @@ function AddNewForm({
       if (update) {
         // update item
         if (!data) return;
+
+        const imageFile = formItems.get("image");
+
+        if (formItems.get("name") === data.name) {
+          formItems.delete("name");
+        }
+        if (formItems.get("sku") === data.sku) {
+          formItems.delete("sku");
+        }
+        if (Number(formItems.get("stock")) === data.stock) {
+          formItems.delete("stock");
+        }
+        if (imageFile instanceof File && imageFile.name == "") {
+          formItems.delete("image");
+        }
+
+        const isEmpty = formItems.entries().next().done;
+
+        if (isEmpty) {
+          return toast.error("Nothing changed");
+        }
+
         await updateItem(formItems, data.$id, data.sku);
         toast.update(toastId, {
           render: "Item Updated",
@@ -79,6 +81,8 @@ function AddNewForm({
           isLoading: false,
           autoClose: 3000,
         });
+        setLoading(false);
+        router.push("/products");
         return;
       }
       const result = await addNewItem(formItems);
@@ -89,7 +93,8 @@ function AddNewForm({
           isLoading: false,
           autoClose: 3000,
         });
-        router.push("/manage");
+        setLoading(false);
+        router.push("/products");
       } else {
         toast.update(toastId, {
           render: result.message,
@@ -97,8 +102,10 @@ function AddNewForm({
           isLoading: false,
           autoClose: 3000,
         });
+        setLoading(false);
       }
     } catch (error: unknown) {
+      setLoading(false);
       if (error instanceof Error) {
         toast.update(toastId, {
           render: error.message,
@@ -196,7 +203,8 @@ function AddNewForm({
             </Link>
             <button
               type="submit"
-              className="bg-green-200 border border-green-300 py-2 gap-1 justify-center items-center rounded-md px-4 flex"
+              className="bg-green-200 border border-green-300 py-2 gap-1 justify-center items-center rounded-md px-4 flex disabled:cursor-not-allowed disabled:bg-gray-200 disabled:border-gray-300"
+              disabled={loading}
             >
               <LuSave />
 
@@ -210,21 +218,38 @@ function AddNewForm({
           <h2 className="text-md font-medium">Image Preview</h2>
           <div className="mt-2 bg-gray-100 w-40 h-40 rounded-xl overflow-hidden">
             {preview ? (
-              <img
-                src={preview}
-                alt="preview"
-                className="w-full h-full object-cover rounded-xl"
-              />
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  aspectRatio: "1/1",
+                }}
+              >
+                <Image
+                  src={preview}
+                  alt="preview"
+                  className="w-full h-full object-cover rounded-xl"
+                  fill
+                />
+              </div>
             ) : (
-              <img
-                src={`${
-                  update
-                    ? data?.image
-                    : "https://fakeimg.pl/150x150?text=Preview&font=bebas&font_size=30"
-                }`}
-                alt="preview"
-                className="w-full h-full object-cover rounded-xl"
-              />
+              <div
+                style={{
+                  position: "relative",
+                  aspectRatio: "1/1",
+                }}
+              >
+                <Image
+                  src={`${
+                    update
+                      ? data?.image
+                      : "https://fakeimg.pl/150x150?text=Preview&font=bebas&font_size=30"
+                  }`}
+                  alt="preview"
+                  fill
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              </div>
             )}
           </div>
         </div>

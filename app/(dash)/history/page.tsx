@@ -17,7 +17,10 @@ async function page({
       <HistoryFilters />
 
       {/* History table */}
-      <Suspense fallback={<Spinner />} key={JSON.stringify(params)}>
+      <Suspense
+        fallback={<Spinner className="mt-8 flex" size={30} />}
+        key={JSON.stringify(params)}
+      >
         <HistoryTable params={params} />
       </Suspense>
     </div>

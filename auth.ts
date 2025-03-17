@@ -54,9 +54,9 @@ const auth: Auth = {
       password
     );
 
-    if (!session) throw new Error("Authentication Failed");
-
-    console.log("hello");
+    if (!session) {
+      throw new Error("Authentication Failed");
+    }
 
     const cookieStore = await cookies();
     cookieStore.set("session", session.secret, {
