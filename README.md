@@ -7,8 +7,8 @@ A minimal and efficient stock management solution designed to keep track of inve
 ### ✨ Features
 
 - Add Items — Quickly add new stock items to the inventory.
-- Update Items — Modify item details like quantity, name, or description.
-- Issue Items — Manage issuing of stock items to users or departments.
+- Update Items — Modify item details like quantity, name, or image.
+- Issue Items — Manage issuing of stock items to users.
 - Add Users — Maintain a list of users who can receive issued items.
-- History Log — Track all inventory activities, including additions, updates, and issuances.
-- Filterable History — Easily search and filter the history log by date, user, or item for quick insights
+- History Log — Track all inventory activities.
+- Filterable History — Easily search and filter the history log by date.
